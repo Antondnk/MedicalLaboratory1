@@ -126,9 +126,13 @@
   <ItemGroup>
     <ClCompile Include="Analysis.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Patient.cpp" />
+    <ClCompile Include="TestResult.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Analysis.h" />
+    <ClInclude Include="Patient.h" />
+    <ClInclude Include="TestResult.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
