@@ -1,43 +1,41 @@
 #include "Patient.h"
 #include <iostream>
 
-// Реализация конструктора
-Patient::Patient(const std::string& fullName) : fullName(fullName) {}
+using namespace std;
 
-// Реализация добавления результата (С ПРОВЕРКОЙ ОГРАНИЧЕНИЯ)
-bool Patient::addTestResult(const TestResult& result) {
+Patient::Patient(const string& fullName) : fullName(fullName) {}//реализация конструктора
 
-    // Это цикл for (range-based), фишка современного C++.
-    // Он читается так: "Для каждого существующего результата (existingResult) внутри коллекции (results)..."
-    // Мы используем константную ссылку (const auto&), чтобы не копировать данные и работать быстро.
+bool Patient::addTestResult(const TestResult& result) //реализация добавления результата (С ПРОВЕРКОЙ ОГРАНИЧЕНИЯ)
+{
+    //использование константной ссылки (const auto&), чтобы не копировать данные и работать быстро
     for (const auto& existingResult : results) {
 
-        // Проверяем наше ограничение: совпадают ли название анализа И дата
+        //проверка ограничения: совпадают ли название анализа И дата
         if (existingResult.getAnalysisName() == result.getAnalysisName() &&
             existingResult.getDate() == result.getDate()) {
 
-            std::cout << "[ОШИБКА] Пациент " << fullName << " уже сдавал анализ '"
+            cout << "[ОШИБКА] Пациент " << fullName << " уже сдавал анализ '"
                 << result.getAnalysisName() << "' в дату " << result.getDate() << "!\n";
-            return false; // Отклоняем добавление, возвращаем ложь
+            return false; //Отклонение добавления, возвращение лжи
         }
     }
 
-    // Если цикл прошел и не нашел совпадений, значит всё окей.
-    // Метод push_back() добавляет элемент в конец вектора.
-    results.push_back(result);
-    return true; // Возвращаем истину (успех)
+    //Если цикл прошел и не нашел совпадений, значит всё окей
+    
+    results.push_back(result);      //Метод push_back() добавляет элемент в конец вектора
+    return true;
 }
 
-// Вывод полной карточки пациента
+//Вывод полной карточки пациента
 void Patient::printMedicalRecord() const {
-    std::cout << "========================================\n";
-    std::cout << "Медицинская карта пациента: " << fullName << "\n";
-    std::cout << "Количество сданных анализов: " << results.size() << "\n"; // Метод size() возвращает размер вектора
-    std::cout << "История анализов:\n";
+    cout << "========================================\n";
+    cout << "Медицинская карта пациента: " << fullName << "\n";
+    cout << "Количество сданных анализов: " << results.size() << "\n"; //Метод size() возвращает размер вектора
+    cout << "История анализов:\n";
 
-    // Снова удобный цикл для вывода всех результатов
+    //цикл для вывода всех результатов
     for (const auto& result : results) {
         result.printInfo();
     }
-    std::cout << "========================================\n";
+    cout << "========================================\n";
 }

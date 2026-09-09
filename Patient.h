@@ -1,21 +1,24 @@
 #pragma once
 #include <string>
-#include <vector>      // Подключаем библиотеку для работы с векторами (коллекциями)
-#include "TestResult.h" // Пациент должен знать о классе результатов
+#include <vector>       //библиотека для работы с векторами (коллекциями)
+#include "TestResult.h" 
 
-class Patient {
+using namespace std;
+
+class Patient 
+{
 private:
-    std::string fullName;            // ФИО пациента
-    std::vector<TestResult> results; // Та самая коллекция (вектор результатов)
+    string fullName;            //ФИО пациента
+    vector<TestResult> results; //вектор результатов
 
 public:
-    // Конструктор
-    Patient(const std::string& fullName);
+    
+    Patient(const string& fullName);//Конструктор
 
-    // Метод добавления нового результата.
-    // Возвращает bool (true - успешно добавлено, false - ошибка ограничения)
+    //метод добавления нового результата
+    //возвращает bool (true - успешно добавлено, false - ошибка ограничения)
     bool addTestResult(const TestResult& result);
 
-    // Метод вывода всей медицинской карты
+    //метод вывода всей медицинской карты
     void printMedicalRecord() const;
 };

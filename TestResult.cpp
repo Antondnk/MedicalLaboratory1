@@ -1,17 +1,17 @@
 #include "TestResult.h"
 #include <iostream>
 
-// Реализация конструктора
-TestResult::TestResult(const Analysis& analysis, const std::string& date, double value)
+using namespace std;
+
+//Реализация конструктора
+TestResult::TestResult(const Analysis& analysis, const string& date, double value)
     : analysis(analysis), date(date), value(value) {
-    // Вызываем нашу приватную функцию сразу при создании объекта!
-    // Благодаря этому статус автоматически посчитается и запишется.
+    //Вызывает приватную функцию сразу при создании объекта
+    //Благодаря этому статус автоматически посчитается и запишется
     calculateStatus();
 }
 
-// Та самая скрытая (инкапсулированная) логика
 void TestResult::calculateStatus() {
-    // Объект analysis знает свои нормы, мы просто просим их через геттеры
     if (value < analysis.getMinNormal()) {
         status = "Ниже нормы";
     }
@@ -23,15 +23,15 @@ void TestResult::calculateStatus() {
     }
 }
 
-// Реализация геттеров
-std::string TestResult::getDate() const { return date; }
-// Обрати внимание: мы получаем имя анализа, обращаясь к объекту analysis внутри нас
-std::string TestResult::getAnalysisName() const { return analysis.getName(); }
+//Реализация геттеров
+string TestResult::getDate() const { return date; }
+//получение имени анализа
+string TestResult::getAnalysisName() const { return analysis.getName(); }
 double TestResult::getValue() const { return value; }
-std::string TestResult::getStatus() const { return status; }
+string TestResult::getStatus() const { return status; }
 
-// Вывод на экран
+//Вывод на экран
 void TestResult::printInfo() const {
-    std::cout << "[" << date << "] Анализ: " << analysis.getName()
-        << " | Результат: " << value << " (" << status << ")" << std::endl;
+    cout << "[" << date << "] Анализ: " << analysis.getName()
+        << " | Результат: " << value << " (" << status << ")" << endl;
 }
