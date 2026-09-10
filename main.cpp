@@ -1,4 +1,6 @@
 ﻿#include <iostream>
+#include <string>
+#include <vector>
 #include "Analysis.h"
 #include "TestResult.h"
 #include "Patient.h"
@@ -6,52 +8,118 @@
 using namespace std;
 
 int main() {
-    //поддержка русского языка в консоли Windows
+    //Поддержка русского языка в консоли
     setlocale(LC_ALL, "Russian");
 
-    cout << "=== ДЕМОНСТРАЦИЯ РАБОТЫ МЕДИЦИНСКОЙ ЛАБОРАТОРИИ ===\n\n";
+    //Создание хранилища доступных анализов для нашей лаборатории
+    vector<Analysis> availableAnalyses;
+    availableAnalyses.push_back(Analysis("Общий анализ крови", "Гематология", 500.0, 4.0, 9.0));
+    availableAnalyses.push_back(Analysis("Уровень глюкозы", "Биохимия", 300.0, 3.3, 5.5));
+    availableAnalyses.push_back(Analysis("Холестерин", "Биохимия", 400.0, 3.2, 5.2));
 
-    //1.Создание объектов (виды анализов)
-    cout << "--- 1. Доступные виды анализов ---\n";
-    Analysis bloodTest("Общий анализ крови", "Гематология", 500.0, 4.0, 9.0);
-    Analysis sugarTest("Уровень глюкозы", "Биохимия", 300.0, 3.3, 5.5);
+    cout << "=== ДОБРО ПОЖАЛОВАТЬ В МЕДИЦИНСКУЮ ЛАБОРАТОРИЮ ===\n\n";
 
-    bloodTest.printInfo();
-    sugarTest.printInfo();
+    //Регистрация пациента
+    cout << "Введите ФИО пациента для регистрации: ";
+    string patientName;
+    //getline для чтения строки с пробелами (Иванов Иван Иванович)
+    getline(cin, patientName);
+    Patient currentPatient(patientName);
 
-    // 2.Изменение характеристик объекта
-    cout << "\n--- 2. Изменение стоимости ---\n";
-    cout << "Изменяем цену на глюкозу с 300 на 350 руб...\n";
-    sugarTest.setCost(350.0);
-    sugarTest.printInfo(); //Проверка, что цена изменилась
+    int choice = -1;
 
-    // 3.Создание пациента и результатов
-    cout << "\n--- 3. Обслуживание пациента ---\n";
-    Patient patient1("Иванов Иван Иванович");
+    //Главный цикл меню
+    while (choice != 0) {
+        cout << "\n--- ГЛАВНОЕ МЕНЮ ---\n";
+        cout << "1. Показать список доступных анализов\n";
+        cout << "2. Изменить стоимость анализа\n";
+        cout << "3. Сдать анализ (добавить результат пациенту)\n";
+        cout << "4. Показать медицинскую карту пациента\n";
+        cout << "0. Выход\n";
+        cout << "Выберите действие: ";
 
-    //Пациент сдает кровь (результат 5.2 - норма)
-    TestResult res1(bloodTest, "10.09.2023", 5.2);
-    //Пациент сдает сахар (результат 6.1 - выше нормы)
-    TestResult res2(sugarTest, "10.09.2023", 6.1);
+        cin >> choice;
 
-    cout << "Добавляем результаты пациенту...\n";
-    patient1.addTestResult(res1);
-    patient1.addTestResult(res2);
+        //Если пользователь ввел букву вместо цифры, предотвращаем бесконечный цикл
+        if (cin.fail()) {
+            cin.clear(); //Очищаем флаг ошибки
+            cin.ignore(10000, '\n'); //Пропускаем кривой ввод
+            cout << "Ошибка ввода! Введите число.\n";
+            continue;
+        }
 
-    // 4.Проверка бизнес-ограничения (Пытаемся сдать кровь второй раз в тот же день)
-    cout << "\n--- 4. Проверка ограничения (защита от дубликатов) ---\n";
-    TestResult duplicateRes(bloodTest, "10.09.2023", 7.0);
-    patient1.addTestResult(duplicateRes); //Тут должна выскочить красная ошибка
+        switch (choice) {
+        case 1: {
+            cout << "\n--- ДОСТУПНЫЕ АНАЛИЗЫ ---\n";
+            for (size_t i = 0; i < availableAnalyses.size(); ++i) {
+                cout << i + 1 << ". ";
+                availableAnalyses[i].printInfo();
+            }
+            break;
+        }
+        case 2: {
+            cout << "\nВведите номер анализа для изменения цены (1 - " << availableAnalyses.size() << "): ";
+            int index;
+            cin >> index;
 
-    //Но на следующий день сдавать можно
-    cout << "\nПациент сдает кровь на следующий день...\n";
-    TestResult res3(bloodTest, "11.09.2023", 4.1);
-    patient1.addTestResult(res3);
+            if (index >= 1 && index <= availableAnalyses.size()) {
+                cout << "Текущая стоимость: " << availableAnalyses[index - 1].getCost() << " руб.\n";
+                cout << "Введите новую стоимость: ";
+                double newCost;
+                cin >> newCost;
 
-    // 5.Вывод полной информации (медицинской карты)
-    cout << "\n--- 5. Итоговая выписка ---\n";
-    patient1.printMedicalRecord();
+                availableAnalyses[index - 1].setCost(newCost);
+                cout << "Стоимость успешно изменена!\n";
+            }
+            else {
+                cout << "Неверный номер анализа!\n";
+            }
+            break;
+        }
+        case 3: {
+            cout << "\nВведите номер анализа, который сдает пациент (1 - " << availableAnalyses.size() << "): ";
+            int index;
+            cin >> index;
 
-    cout << "\nПрограмма успешно завершена.\n";
+            if (index >= 1 && index <= availableAnalyses.size()) {
+                cin.ignore(10000, '\n');
+
+                cout << "Введите дату сдачи (например, 10.09.2023): ";
+                string date;
+                getline(cin, date);
+
+                cout << "Введите полученный результат (число): ";
+                double value;
+                cin >> value;
+
+                //Создание объекта результата
+                TestResult newResult(availableAnalyses[index - 1], date, value);
+
+                //проверка на дубликаты
+                if (currentPatient.addTestResult(newResult)) {
+                    cout << "Результат успешно добавлен в карту!\n";
+                }
+            }
+            else {
+                cout << "Неверный номер анализа!\n";
+            }
+            break;
+        }
+        case 4: {
+            cout << "\n";
+            currentPatient.printMedicalRecord();
+            break;
+        }
+        case 0: {
+            cout << "Завершение работы программы. Будьте здоровы!\n";
+            break;
+        }
+        default: {
+            cout << "Неизвестная команда. Попробуйте снова.\n";
+            break;
+        }
+        }
+    }
+
     return 0;
 }

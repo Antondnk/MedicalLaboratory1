@@ -9,9 +9,9 @@ class Analysis {
 private:
     string name;       //Название анализа
     string category;   //Категория (например, "Гематология")
-    double cost;            //Стоимость
-    double minNormal;       //Минимальная граница нормы
-    double maxNormal;       //Максимальная граница нормы
+    double cost;       //Стоимость
+    double minNormal;  //Минимальная граница нормы
+    double maxNormal;  //Максимальная граница нормы
 
 public:
     //Конструктор - вызывается при создании объекта
