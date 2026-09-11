@@ -1,9 +1,9 @@
 ﻿#include <iostream>
 #include <string>
 #include <vector>
-#include "Analysis.h"
-#include "TestResult.h"
-#include "Patient.h"
+#include "C:\Users\user\Desktop\ПНАЯВУ_3сем\MedicalLaboratory1\include\Analysis.h"
+#include "C:\Users\user\Desktop\ПНАЯВУ_3сем\MedicalLaboratory1\include\TestResult.h"
+#include "C:\Users\user\Desktop\ПНАЯВУ_3сем\MedicalLaboratory1\include\Patient.h"
 #define cleanbuf 1000
 using namespace std;
 

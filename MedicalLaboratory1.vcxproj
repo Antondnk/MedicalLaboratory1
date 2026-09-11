@@ -18,6 +18,17 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\Analysis.h" />
+    <ClInclude Include="include\Patient.h" />
+    <ClInclude Include="include\TestResult.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\Analysis.cpp" />
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\Patient.cpp" />
+    <ClCompile Include="src\TestResult.cpp" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
@@ -123,17 +134,6 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="Analysis.cpp" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="Patient.cpp" />
-    <ClCompile Include="TestResult.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="Analysis.h" />
-    <ClInclude Include="Patient.h" />
-    <ClInclude Include="TestResult.h" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
