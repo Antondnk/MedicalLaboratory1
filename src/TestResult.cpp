@@ -3,11 +3,9 @@
 
 using namespace std;
 
-//Реализация конструктора
+
 TestResult::TestResult(const Analysis& analysis, const string& date, double value)
     : analysis(analysis), date(date), value(value) {
-    //Вызывает приватную функцию сразу при создании объекта
-    //Благодаря этому статус автоматически посчитается и запишется
     calculateStatus();
 }
 
@@ -23,7 +21,7 @@ void TestResult::calculateStatus() {
     }
 }
 
-//Реализация геттеров
+
 string TestResult::getDate() const { return date; }
 //получение имени анализа
 string TestResult::getAnalysisName() const { return analysis.getName(); }
