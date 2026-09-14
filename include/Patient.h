@@ -1,6 +1,6 @@
 #pragma once
 #include <string>
-#include <vector>       //библиотека для работы с векторами (коллекциями)
+#include <vector>      
 #include "TestResult.h" 
 
 using namespace std;
@@ -8,17 +8,14 @@ using namespace std;
 class Patient 
 {
 private:
-    string fullName;            //ФИО пациента
-    vector<TestResult> results; //вектор результатов
+    string fullName;            
+    vector<TestResult> results;
 
 public:
     
-    Patient(const string& fullName);//Конструктор
+    Patient(const string& fullName);
 
-    //метод добавления нового результата
-    //возвращает bool (true - успешно добавлено, false - ошибка ограничения)
     bool addTestResult(const TestResult& result);
 
-    //метод вывода всей медицинской карты
     void printMedicalRecord() const;
 };
