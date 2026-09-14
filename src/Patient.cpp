@@ -1,4 +1,4 @@
-#include "C:\Users\user\Desktop\ְֽֿßֲ׃_3סול\MedicalLaboratory1\include\Patient.h"
+#include "Patient.h"
 #include <iostream>
 
 using namespace std;

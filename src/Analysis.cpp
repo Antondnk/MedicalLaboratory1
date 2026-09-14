@@ -1,4 +1,4 @@
-#include "C:\Users\user\Desktop\ְֽֿßֲ׃_3סול\MedicalLaboratory1\include\Analysis.h"
+#include "Analysis.h"
 
 using namespace std;
 

@@ -1,4 +1,4 @@
-#include "C:\Users\user\Desktop\ְֽֿßֲ׃_3סול\MedicalLaboratory1\include\TestResult.h"
+#include "TestResult.h"
 #include <iostream>
 
 using namespace std;
