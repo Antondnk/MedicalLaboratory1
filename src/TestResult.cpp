@@ -23,12 +23,11 @@ void TestResult::calculateStatus() {
 
 
 string TestResult::getDate() const { return date; }
-//получение имени анализа
+
 string TestResult::getAnalysisName() const { return analysis.getName(); }
 double TestResult::getValue() const { return value; }
 string TestResult::getStatus() const { return status; }
 
-//Вывод на экран
 void TestResult::printInfo() const {
     cout << "[" << date << "] Анализ: " << analysis.getName()
         << " | Результат: " << value << " (" << status << ")" << endl;

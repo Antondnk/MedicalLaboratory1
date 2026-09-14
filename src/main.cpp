@@ -8,10 +8,8 @@
 using namespace std;
 
 int main() {
-    //Поддержка русского языка в консоли
     setlocale(LC_ALL, "Russian");
 
-    //Создание хранилища доступных анализов для нашей лаборатории
     vector<Analysis> availableAnalyses;
     availableAnalyses.push_back(Analysis("Общий анализ крови", "Гематология", 50.0, 4.0, 9.0));
     availableAnalyses.push_back(Analysis("Уровень глюкозы", "Биохимия", 30.0, 3.3, 5.5));
@@ -19,16 +17,14 @@ int main() {
 
     cout << "=== ДОБРО ПОЖАЛОВАТЬ В МЕДИЦИНСКУЮ ЛАБОРАТОРИЮ ===\n\n";
 
-    //Регистрация пациента
     cout << "Введите ФИО пациента для регистрации: ";
     string patientName;
-    //getline для чтения строки с пробелами (Иванов Иван Иванович)
+
     getline(cin, patientName);
     Patient currentPatient(patientName);
 
     int choice = -1;
 
-    //Главный цикл меню
     while (choice != 0) {
         cout << "\n--- ГЛАВНОЕ МЕНЮ ---\n";
         cout << "1. Показать список доступных анализов\n";
@@ -40,10 +36,9 @@ int main() {
 
         cin >> choice;
 
-        //Если пользователь ввел букву вместо цифры, предотвращаем бесконечный цикл
         if (cin.fail()) {
-            cin.clear(); //Очищаем флаг ошибки
-            cin.ignore(cleanbuf, '\n'); //Пропускаем кривой ввод
+            cin.clear(); 
+            cin.ignore(cleanbuf, '\n');
             cout << "Ошибка ввода! Введите число.\n";
             continue;
         }
@@ -92,10 +87,8 @@ int main() {
                 double value;
                 cin >> value;
 
-                //Создание объекта результата
                 TestResult newResult(availableAnalyses[index - 1], date, value);
 
-                //проверка на дубликаты
                 if (currentPatient.addTestResult(newResult)) {
                     cout << "Результат успешно добавлен в карту!\n";
                 }
