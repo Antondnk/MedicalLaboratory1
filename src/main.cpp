@@ -79,7 +79,7 @@ int main() {
             if (index >= 1 && index <= availableAnalyses.size()) {
                 cin.ignore(cleanbuf, '\n');
 
-                cout << "Введите дату сдачи (например, 10.09.2023): ";
+                cout << "Введите дату сдачи (например, 10.09.2026): ";
                 string date;
                 getline(cin, date);
 
