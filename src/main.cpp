@@ -31,6 +31,8 @@ int main() {
         cout << "2. Изменить стоимость анализа\n";
         cout << "3. Сдать анализ (добавить результат пациенту)\n";
         cout << "4. Показать медицинскую карту пациента\n";
+        cout << "5. Добавить новый вид анализа\n";
+        cout << "6. Удалить вид анализа\n";
         cout << "0. Выход\n";
         cout << "Выберите действие: ";
 
@@ -101,6 +103,37 @@ int main() {
         case 4: {
             cout << "\n";
             currentPatient.printMedicalRecord();
+            break;
+        }
+        case 5: {
+            cin.ignore(cleanbuf, '\n');
+            string name, category;
+            double cost, minNormal, maxNormal;
+            cout << "Введите название анализа: ";
+            getline(cin, name);
+            cout << "Введите категорию анализа: ";
+            getline(cin, category);
+            cout << "Введите стоимость: ";
+            cin >> cost;
+            cout << "Введите минимальную норму: ";
+            cin >> minNormal;
+            cout << "Введите максимальную норму: ";
+            cin >> maxNormal;
+            availableAnalyses.push_back(Analysis(name, category, cost, minNormal, maxNormal));
+            cout << "Новый вид анализа успешно добавлен!\n";
+            break;
+        }
+        case 6: {
+            cout << "Введите номер анализа для удаления (1 - " << availableAnalyses.size() << "): ";
+            int index;
+            cin >> index;
+            if (index >= 1 && index <= availableAnalyses.size()) {
+                availableAnalyses.erase(availableAnalyses.begin() + index - 1);
+                cout << "Анализ успешно удален!\n";
+            }
+            else {
+                cout << "Неверный номер анализа!\n";
+            }
             break;
         }
         case 0: {
