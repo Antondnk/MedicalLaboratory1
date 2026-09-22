@@ -11,15 +11,15 @@ private:
     double value;
     string status;
 
-    void calculateStatus();
+    void calculate_status();
 
 public:
     TestResult(const Analysis& analysis, const string& date, double value);
 
-    string getDate() const;
-    string getAnalysisName() const;
-    double getValue() const;
-    string getStatus() const;
+    string get_date() const;
+    string get_analysis_name() const;
+    double get_value() const;
+    string get_status() const;
 
-    void printInfo() const;
+    void print_info() const;
 };

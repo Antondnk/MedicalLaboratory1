@@ -9,7 +9,7 @@
 #define cleanbuf 1000
 using namespace std;
 
-void showMenu() {
+void show_menu() {
     cout << "\n--- ГЛАВНОЕ МЕНЮ ---\n";
     cout << "1. Показать список доступных анализов\n";
     cout << "2. Изменить стоимость анализа\n";
@@ -21,13 +21,13 @@ void showMenu() {
     cout << "Выберите действие: ";
 }
 
-void processChoice(int choice, vector<Analysis>& availableAnalyses, Patient& currentPatient) {
+void process_choice(int choice, vector<Analysis>& availableAnalyses, Patient& currentPatient) {
     switch (choice) {
     case 1: {
         cout << "\n--- ДОСТУПНЫЕ АНАЛИЗЫ ---\n";
         for (size_t i = 0; i < availableAnalyses.size(); ++i) {
             cout << i + 1 << ". ";
-            availableAnalyses[i].printInfo();
+            availableAnalyses[i].print_info();
         }
         break;
     }
@@ -37,12 +37,12 @@ void processChoice(int choice, vector<Analysis>& availableAnalyses, Patient& cur
         cin >> index;
 
         if (index >= 1 && index <= availableAnalyses.size()) {
-            cout << "Текущая стоимость: " << availableAnalyses[index - 1].getCost() << " руб.\n";
+            cout << "Текущая стоимость: " << availableAnalyses[index - 1].get_cost() << " руб.\n";
             cout << "Введите новую стоимость: ";
             double newCost;
             cin >> newCost;
 
-            availableAnalyses[index - 1].setCost(newCost);
+            availableAnalyses[index - 1].set_cost(newCost);
             cout << "Стоимость успешно изменена!\n";
         }
         else {
@@ -68,7 +68,7 @@ void processChoice(int choice, vector<Analysis>& availableAnalyses, Patient& cur
 
             TestResult newResult(availableAnalyses[index - 1], date, value);
 
-            if (currentPatient.addTestResult(newResult)) {
+            if (currentPatient.add_test_result(newResult)) {
                 cout << "Результат успешно добавлен в карту!\n";
             }
         }
@@ -79,7 +79,7 @@ void processChoice(int choice, vector<Analysis>& availableAnalyses, Patient& cur
     }
     case 4: {
         cout << "\n";
-        currentPatient.printMedicalRecord();
+        currentPatient.print_medical_record();
         break;
     }
     case 5: {
@@ -125,7 +125,7 @@ void processChoice(int choice, vector<Analysis>& availableAnalyses, Patient& cur
     }
 }
 
-void runMenu() {
+void run_menu() {
     vector<Analysis> availableAnalyses;
     availableAnalyses.push_back(Analysis("Общий анализ крови", "Гематология", 50.0, 4.0, 9.0));
     availableAnalyses.push_back(Analysis("Уровень глюкозы", "Биохимия", 30.0, 3.3, 5.5));
@@ -142,7 +142,7 @@ void runMenu() {
     int choice = -1;
 
     while (choice != 0) {
-        showMenu();
+        show_menu();
 
         cin >> choice;
 
@@ -153,6 +153,6 @@ void runMenu() {
             continue;
         }
 
-        processChoice(choice, availableAnalyses, currentPatient);
+        process_choice(choice, availableAnalyses, currentPatient);
     }
 }

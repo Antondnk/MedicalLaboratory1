@@ -15,7 +15,7 @@ public:
     
     Patient(const string& fullName);
 
-    bool addTestResult(const TestResult& result);
+    bool add_test_result(const TestResult& result);
 
-    void printMedicalRecord() const;
+    void print_medical_record() const;
 };

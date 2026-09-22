@@ -16,13 +16,13 @@ private:
 public:
     Analysis(const string& name, const string& category, double cost, double minNormal, double maxNormal);
 
-    string getName() const;
-    string getCategory() const;
-    double getCost() const;
-    double getMinNormal() const;
-    double getMaxNormal() const;
+    string get_name() const;
+    string get_category() const;
+    double get_cost() const;
+    double get_min_normal() const;
+    double get_max_normal() const;
 
-    void setCost(double newCost);
+    void set_cost(double newCost);
 
-    void printInfo() const;
+    void print_info() const;
 };

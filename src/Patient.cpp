@@ -5,15 +5,15 @@ using namespace std;
 
 Patient::Patient(const string& fullName) : fullName(fullName) {}
 
-bool Patient::addTestResult(const TestResult& result)
+bool Patient::add_test_result(const TestResult& result)
 {
     for (const auto& existingResult : results) {
 
-        if (existingResult.getAnalysisName() == result.getAnalysisName() &&
-            existingResult.getDate() == result.getDate()) {
+        if (existingResult.get_analysis_name() == result.get_analysis_name() &&
+            existingResult.get_date() == result.get_date()) {
 
             cout << "[ОШИБКА] Пациент " << fullName << " уже сдавал анализ '"
-                << result.getAnalysisName() << "' в дату " << result.getDate() << "!\n";
+                << result.get_analysis_name() << "' в дату " << result.get_date() << "!\n";
             return false;
         }
     }
@@ -22,14 +22,14 @@ bool Patient::addTestResult(const TestResult& result)
     return true;
 }
 
-void Patient::printMedicalRecord() const {
+void Patient::print_medical_record() const {
     cout << "========================================\n";
     cout << "Медицинская карта пациента: " << fullName << "\n";
     cout << "Количество сданных анализов: " << results.size() << "\n";
     cout << "История анализов:\n";
 
     for (const auto& result : results) {
-        result.printInfo();
+        result.print_info();
     }
     cout << "========================================\n";
 }

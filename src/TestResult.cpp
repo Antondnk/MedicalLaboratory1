@@ -6,14 +6,14 @@ using namespace std;
 
 TestResult::TestResult(const Analysis& analysis, const string& date, double value)
     : analysis(analysis), date(date), value(value) {
-    calculateStatus();
+    calculate_status();
 }
 
-void TestResult::calculateStatus() {
-    if (value < analysis.getMinNormal()) {
+void TestResult::calculate_status() {
+    if (value < analysis.get_min_normal()) {
         status = "Ниже нормы";
     }
-    else if (value > analysis.getMaxNormal()) {
+    else if (value > analysis.get_max_normal()) {
         status = "Выше нормы";
     }
     else {
@@ -22,13 +22,13 @@ void TestResult::calculateStatus() {
 }
 
 
-string TestResult::getDate() const { return date; }
+string TestResult::get_date() const { return date; }
 
-string TestResult::getAnalysisName() const { return analysis.getName(); }
-double TestResult::getValue() const { return value; }
-string TestResult::getStatus() const { return status; }
+string TestResult::get_analysis_name() const { return analysis.get_name(); }
+double TestResult::get_value() const { return value; }
+string TestResult::get_status() const { return status; }
 
-void TestResult::printInfo() const {
-    cout << "[" << date << "] Анализ: " << analysis.getName()
+void TestResult::print_info() const {
+    cout << "[" << date << "] Анализ: " << analysis.get_name()
         << " | Результат: " << value << " (" << status << ")" << endl;
 }
