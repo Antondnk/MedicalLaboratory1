@@ -2,6 +2,9 @@
 
 using namespace std;
 
+// Реализация пустого конструктора
+Analysis::Analysis() : name(""), category(""), cost(0.0), minNormal(0.0), maxNormal(0.0) {}
+
 Analysis::Analysis(const string& name, const string& category, double cost, double minNormal, double maxNormal)
     : name(name), category(category), cost(cost), minNormal(minNormal), maxNormal(maxNormal) {
 }
@@ -18,8 +21,35 @@ void Analysis::set_cost(double newCost) {
     }
 }
 
-void Analysis::print_info() const {
-    cout << "Анализ: " << name << " | Категория: " << category
-        << " | Стоимость: " << cost << " руб."
-        << " | Норма: [" << minNormal << " - " << maxNormal << "]" << endl;
+// Перегрузка оператора >
+bool Analysis::operator>(const Analysis& other) const {
+    return this->cost > other.cost;
+}
+
+// Перегрузка оператора <
+bool Analysis::operator<(const Analysis& other) const {
+    return this->cost < other.cost;
+}
+
+// Реализация вывода (теперь cout << анализ будет сам печатать эту строку)
+ostream& operator<<(ostream& os, const Analysis& obj) {
+    os << "Анализ: " << obj.name << " | Категория: " << obj.category
+        << " | Стоимость: " << obj.cost << " руб."
+        << " | Норма: [" << obj.minNormal << " - " << obj.maxNormal << "]";
+    return os;
+}
+
+// Реализация ввода (cin >> анализ сам задаст все вопросы пользователю)
+istream& operator>>(istream& is, Analysis& obj) {
+    cout << "Введите название анализа: ";
+    getline(is >> ws, obj.name); // is >> ws очищает мусор из буфера перед getline
+    cout << "Введите категорию анализа: ";
+    getline(is, obj.category);
+    cout << "Введите стоимость: ";
+    is >> obj.cost;
+    cout << "Введите минимальную норму: ";
+    is >> obj.minNormal;
+    cout << "Введите максимальную норму: ";
+    is >> obj.maxNormal;
+    return is;
 }
