@@ -1,35 +1,50 @@
 #include "Patient.h"
-#include <iostream>
 
 using namespace std;
 
 Patient::Patient(const string& fullName) : fullName(fullName) {}
 
-bool Patient::add_test_result(const TestResult& result)
-{
+// Реализация оператора += (Добавление)
+Patient& Patient::operator+=(const TestResult& result) {
     for (const auto& existingResult : results) {
-
-        if (existingResult.get_analysis_name() == result.get_analysis_name() &&
-            existingResult.get_date() == result.get_date()) {
-
-            cout << "[ОШИБКА] Пациент " << fullName << " уже сдавал анализ '"
-                << result.get_analysis_name() << "' в дату " << result.get_date() << "!\n";
-            return false;
+        // МАГИЯ С++: Здесь используется наш перегруженный оператор == из TestResult!
+        if (existingResult == result) {
+            cout << "[ОШИБКА] Операция невозможна! Пациент " << fullName << " уже сдавал анализ '"
+                << result.get_analysis_name() << "' в эту дату!\n";
+            return *this; // Возвращаем пациента без изменений
         }
     }
-    
+
     results.push_back(result);
-    return true;
+    return *this;
 }
 
-void Patient::print_medical_record() const {
-    cout << "========================================\n";
-    cout << "Медицинская карта пациента: " << fullName << "\n";
-    cout << "Количество сданных анализов: " << results.size() << "\n";
-    cout << "История анализов:\n";
-
-    for (const auto& result : results) {
-        result.print_info();
+// Реализация оператора -= (Удаление)
+Patient& Patient::operator-=(const TestResult& result) {
+    // Используем итератор для прохода по вектору и удаления
+    for (auto it = results.begin(); it != results.end(); ++it) {
+        if (*it == result) { // Снова используем оператор ==
+            results.erase(it);
+            cout << "Результат успешно удален из карты!\n";
+            return *this;
+        }
     }
-    cout << "========================================\n";
+    // Обработка нештатной ситуации по заданию
+    cout << "[ОШИБКА] Операция невозможна! Такого результата в карте пациента нет.\n";
+    return *this;
+}
+
+// Реализация вывода (Печать карты пациента)
+ostream& operator<<(ostream& os, const Patient& obj) {
+    os << "========================================\n";
+    os << "Медицинская карта пациента: " << obj.fullName << "\n";
+    os << "Количество сданных анализов: " << obj.results.size() << "\n";
+    os << "История анализов:\n";
+
+    for (const auto& result : obj.results) {
+        // МАГИЯ С++: Здесь вызывается оператор << из класса TestResult!
+        os << result << "\n";
+    }
+    os << "========================================\n";
+    return os;
 }

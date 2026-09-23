@@ -6,39 +6,36 @@
 #include "TestResult.h"
 #include "Patient.h"
 #include <cctype>
-#define cleanbuf 1000
+
+const int cleanbuf = 1000;
 using namespace std;
 
 bool isValidDate(const string& date) {
- 
     if (date.length() != 10) return false;
-
     if (date[2] != '.' || date[5] != '.') return false;
-
     for (int i = 0; i < 10; ++i) {
         if (i == 2 || i == 5) continue;
         if (!isdigit(date[i])) return false;
     }
-
     int day = stoi(date.substr(0, 2));
     int month = stoi(date.substr(3, 2));
     int year = stoi(date.substr(6, 4));
-
     if (day < 1 || day > 31) return false;
     if (month < 1 || month > 12) return false;
     if (year < 1900 || year > 2100) return false;
-
     return true;
 }
 
 void show_menu() {
     cout << "\n--- ГЛАВНОЕ МЕНЮ ---\n";
-    cout << "1. Показать список доступных анализов\n";
+    cout << "1. Показать список доступных анализов (демо <<)\n";
     cout << "2. Изменить стоимость анализа\n";
-    cout << "3. Сдать анализ (добавить результат пациенту)\n";
-    cout << "4. Показать медицинскую карту пациента\n";
-    cout << "5. Добавить новый вид анализа\n";
-    cout << "6. Удалить вид анализа\n";
+    cout << "3. Сдать анализ (демо += и friend is_critical)\n";
+    cout << "4. Показать медицинскую карту пациента (демо <<)\n";
+    cout << "5. Добавить новый вид анализа (демо >>)\n";
+    cout << "6. Удалить вид анализа из базы\n";
+    cout << "7. Удалить результат анализа у пациента (демо -=)\n";
+    cout << "8. Сравнить стоимость двух анализов (демо > и <)\n";
     cout << "0. Выход\n";
     cout << "Выберите действие: ";
 }
@@ -48,8 +45,8 @@ void process_choice(int choice, vector<Analysis>& availableAnalyses, Patient& cu
     case 1: {
         cout << "\n--- ДОСТУПНЫЕ АНАЛИЗЫ ---\n";
         for (size_t i = 0; i < availableAnalyses.size(); ++i) {
-            cout << i + 1 << ". ";
-            availableAnalyses[i].print_info();
+            // ИСПОЛЬЗУЕМ ПЕРЕГРУЖЕННЫЙ <<
+            cout << i + 1 << ". " << availableAnalyses[i] << "\n";
         }
         break;
     }
@@ -88,16 +85,21 @@ void process_choice(int choice, vector<Analysis>& availableAnalyses, Patient& cu
                 if (isValidDate(date)) {
                     break;
                 }
-                cout << "Ошибка! Неверный формат даты или несуществующий день/месяц. Попробуйте снова.\n";
+                cout << "Ошибка! Неверный формат даты. Попробуйте снова.\n";
             }
             cout << "Введите полученный результат (число): ";
             double value;
             cin >> value;
 
+            // Создаем результат
             TestResult newResult(availableAnalyses[index - 1], date, value);
 
-            if (currentPatient.add_test_result(newResult)) {
-                cout << "Результат успешно добавлен в карту!\n";
+            // ИСПОЛЬЗУЕМ ПЕРЕГРУЖЕННЫЙ += (он сам напишет об успехе или ошибке)
+            currentPatient += newResult;
+
+            // ДЕМОНСТРАЦИЯ ДРУЖЕСТВЕННОЙ ФУНКЦИИ is_critical
+            if (is_critical(newResult)) {
+                cout << "!!! ВНИМАНИЕ !!! Критический результат отклонения от нормы! Срочно обратитесь к врачу!\n";
             }
         }
         else {
@@ -107,25 +109,15 @@ void process_choice(int choice, vector<Analysis>& availableAnalyses, Patient& cu
     }
     case 4: {
         cout << "\n";
-        currentPatient.print_medical_record();
+        // ИСПОЛЬЗУЕМ ПЕРЕГРУЖЕННЫЙ <<
+        cout << currentPatient;
         break;
     }
     case 5: {
-        cin.ignore(cleanbuf, '\n');
-        string name, category;
-        double cost, minNormal, maxNormal;
-        cout << "Введите название анализа: ";
-        getline(cin, name);
-        cout << "Введите категорию анализа: ";
-        getline(cin, category);
-        cout << "Введите стоимость: ";
-        cin >> cost;
-        cout << "Введите минимальную норму: ";
-        cin >> minNormal;
-        cout << "Введите максимальную норму: ";
-        cin >> maxNormal;
-
-        availableAnalyses.push_back(Analysis(name, category, cost, minNormal, maxNormal));
+        // ИСПОЛЬЗУЕМ ПЕРЕГРУЖЕННЫЙ >> (весь ввод спрятан внутри!)
+        Analysis newAnalysis;
+        cin >> newAnalysis;
+        availableAnalyses.push_back(newAnalysis);
         cout << "Новый вид анализа успешно добавлен!\n";
         break;
     }
@@ -139,6 +131,50 @@ void process_choice(int choice, vector<Analysis>& availableAnalyses, Patient& cu
         }
         else {
             cout << "Неверный номер анализа!\n";
+        }
+        break;
+    }
+    case 7: {
+        // Демонстрация оператора -=
+        cout << "\nВведите номер анализа из базы, который нужно удалить из карты пациента (1 - " << availableAnalyses.size() << "): ";
+        int index;
+        cin >> index;
+        if (index >= 1 && index <= availableAnalyses.size()) {
+            cin.ignore(cleanbuf, '\n');
+            cout << "Введите дату сдачи для удаления (например, 10.09.2026): ";
+            string date;
+            getline(cin, date);
+
+            // Создаем "пустышку" результата. Передаем 0, так как наш оператор == 
+            // проверяет только совпадение имени и даты!
+            TestResult dummyResult(availableAnalyses[index - 1], date, 0);
+
+            // ИСПОЛЬЗУЕМ ПЕРЕГРУЖЕННЫЙ -=
+            currentPatient -= dummyResult;
+        }
+        else {
+            cout << "Неверный номер анализа!\n";
+        }
+        break;
+    }
+    case 8: {
+        // Демонстрация операторов > и <
+        if (availableAnalyses.size() < 2) {
+            cout << "Недостаточно анализов в базе для сравнения.\n";
+            break;
+        }
+        cout << "\nСравним первый и второй анализ в базе:\n";
+        cout << "1: " << availableAnalyses[0].get_name() << " (" << availableAnalyses[0].get_cost() << " руб.)\n";
+        cout << "2: " << availableAnalyses[1].get_name() << " (" << availableAnalyses[1].get_cost() << " руб.)\n";
+
+        if (availableAnalyses[0] > availableAnalyses[1]) {
+            cout << "Вывод: Первый анализ дороже второго.\n";
+        }
+        else if (availableAnalyses[0] < availableAnalyses[1]) {
+            cout << "Вывод: Первый анализ дешевле второго.\n";
+        }
+        else {
+            cout << "Вывод: Анализы стоят одинаково.\n";
         }
         break;
     }
