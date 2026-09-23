@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <iostream>
 #include "Analysis.h"
 
 using namespace std;
@@ -21,5 +22,13 @@ public:
     double get_value() const;
     string get_status() const;
 
-    void print_info() const;
+    // 1. Перегрузка оператора равенства (проверка на дубликаты)
+    bool operator==(const TestResult& other) const;
+
+    // 2. Дружественная функция для перегрузки вывода (вместо print_info)
+    friend ostream& operator<<(ostream& os, const TestResult& obj);
+
+    // 3. Дополнительная дружественная функция (по заданию!)
+    // У нее будет прямой доступ к private полю value
+    friend bool is_critical(const TestResult& obj);
 };
