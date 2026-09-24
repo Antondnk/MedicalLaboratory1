@@ -91,13 +91,10 @@ void process_choice(int choice, vector<Analysis>& availableAnalyses, Patient& cu
             double value;
             cin >> value;
 
-            // Создаем результат
             TestResult newResult(availableAnalyses[index - 1], date, value);
 
-            // ИСПОЛЬЗУЕМ ПЕРЕГРУЖЕННЫЙ += (он сам напишет об успехе или ошибке)
             currentPatient += newResult;
 
-            // ДЕМОНСТРАЦИЯ ДРУЖЕСТВЕННОЙ ФУНКЦИИ is_critical
             if (is_critical(newResult)) {
                 cout << "!!! ВНИМАНИЕ !!! Критический результат отклонения от нормы! Срочно обратитесь к врачу!\n";
             }
@@ -109,12 +106,12 @@ void process_choice(int choice, vector<Analysis>& availableAnalyses, Patient& cu
     }
     case 4: {
         cout << "\n";
-        // ИСПОЛЬЗУЕМ ПЕРЕГРУЖЕННЫЙ <<
+
         cout << currentPatient;
         break;
     }
     case 5: {
-        // ИСПОЛЬЗУЕМ ПЕРЕГРУЖЕННЫЙ >> (весь ввод спрятан внутри!)
+
         Analysis newAnalysis;
         cin >> newAnalysis;
         availableAnalyses.push_back(newAnalysis);
@@ -135,7 +132,7 @@ void process_choice(int choice, vector<Analysis>& availableAnalyses, Patient& cu
         break;
     }
     case 7: {
-        // Демонстрация оператора -=
+
         cout << "\nВведите номер анализа из базы, который нужно удалить из карты пациента (1 - " << availableAnalyses.size() << "): ";
         int index;
         cin >> index;
@@ -145,11 +142,8 @@ void process_choice(int choice, vector<Analysis>& availableAnalyses, Patient& cu
             string date;
             getline(cin, date);
 
-            // Создаем "пустышку" результата. Передаем 0, так как наш оператор == 
-            // проверяет только совпадение имени и даты!
             TestResult dummyResult(availableAnalyses[index - 1], date, 0);
 
-            // ИСПОЛЬЗУЕМ ПЕРЕГРУЖЕННЫЙ -=
             currentPatient -= dummyResult;
         }
         else {
@@ -158,7 +152,7 @@ void process_choice(int choice, vector<Analysis>& availableAnalyses, Patient& cu
         break;
     }
     case 8: {
-        // Демонстрация операторов > и <
+
         if (availableAnalyses.size() < 2) {
             cout << "Недостаточно анализов в базе для сравнения.\n";
             break;
