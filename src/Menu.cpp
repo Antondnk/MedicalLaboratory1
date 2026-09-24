@@ -45,7 +45,6 @@ void process_choice(int choice, vector<Analysis>& availableAnalyses, Patient& cu
     case 1: {
         cout << "\n--- ÄÎÑÒÓÏÍÛÅ ÀÍÀËÈÇÛ ---\n";
         for (size_t i = 0; i < availableAnalyses.size(); ++i) {
-            // ÈÑÏÎËÜÇÓÅÌ ÏÅÐÅÃÐÓÆÅÍÍÛÉ <<
             cout << i + 1 << ". " << availableAnalyses[i] << "\n";
         }
         break;
