@@ -15,6 +15,8 @@ private:
 public:
     Patient(const string& fullName);
 
+    bool has_result(const TestResult& result) const;
+
     Patient& operator+=(const TestResult& result);
 
     Patient& operator-=(const TestResult& result);

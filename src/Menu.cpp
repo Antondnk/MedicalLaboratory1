@@ -92,17 +92,19 @@ void process_choice(int choice, vector<Analysis>& availableAnalyses, Patient& cu
 
             TestResult newResult(availableAnalyses[index - 1], date, value);
 
-            currentPatient += newResult;
-
-            if (is_critical(newResult)) {
-                cout << "!!! ВНИМАНИЕ !!! Критический результат отклонения от нормы! Срочно обратитесь к врачу!\n";
+            if (currentPatient.has_result(newResult)) {
+                cout << "[ОШИБКА] Операция невозможна! Пациент уже сдавал данный анализ в эту дату!\n";
             }
+            else {
+                currentPatient += newResult;
+                cout << "Анализ успешно добавлен в карту пациента!\n";
+
+                if (is_critical(newResult)) {
+                    cout << "!!! ВНИМАНИЕ !!! Критический результат отклонения от нормы! Срочно обратитесь к врачу!\n";
+                }
+            }
+            break;
         }
-        else {
-            cout << "Неверный номер анализа!\n";
-        }
-        break;
-    }
     case 4: {
         cout << "\n";
 
@@ -143,13 +145,15 @@ void process_choice(int choice, vector<Analysis>& availableAnalyses, Patient& cu
 
             TestResult dummyResult(availableAnalyses[index - 1], date, 0);
 
-            currentPatient -= dummyResult;
+            if (!currentPatient.has_result(dummyResult)) {
+                cout << "[ОШИБКА] Операция невозможна! Такого результата в карте пациента нет.\n";
+            }
+            else {
+                currentPatient -= dummyResult;
+                cout << "Результат успешно удален из карты!\n";
+            }
+            break;
         }
-        else {
-            cout << "Неверный номер анализа!\n";
-        }
-        break;
-    }
     case 8: {
 
         if (availableAnalyses.size() < 2) {

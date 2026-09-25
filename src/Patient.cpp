@@ -4,15 +4,21 @@
 
     Patient::Patient(const string& fullName) : fullName(fullName) {}
 
+    bool Patient::has_result(const TestResult& result) const {
+        for (const auto& existingResult : results) {
+            if (existingResult == result) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     Patient& Patient::operator+=(const TestResult& result) {
         for (const auto& existingResult : results) {
             if (existingResult == result) {
-                cout << "[ОШИБКА] Операция невозможна! Пациент " << fullName << " уже сдавал анализ '"
-                    << result.get_analysis_name() << "' в эту дату!\n";
                 return *this;
             }
         }
-
         results.push_back(result);
         return *this;
     }
@@ -22,11 +28,9 @@
         for (auto it = results.begin(); it != results.end(); ++it) {
             if (*it == result) { 
                 results.erase(it);
-                cout << "Результат успешно удален из карты!\n";
                 return *this;
             }
         }
-        cout << "[ОШИБКА] Операция невозможна! Такого результата в карте пациента нет.\n";
         return *this;
     }
 
