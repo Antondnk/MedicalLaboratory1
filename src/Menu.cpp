@@ -103,16 +103,18 @@ void process_choice(int choice, vector<Analysis>& availableAnalyses, Patient& cu
                     cout << "!!! ВНИМАНИЕ !!! Критический результат отклонения от нормы! Срочно обратитесь к врачу!\n";
                 }
             }
-            break;
         }
+        else {
+            cout << "Неверный номер анализа!\n";
+        }
+        break;
+    }
     case 4: {
         cout << "\n";
-
         cout << currentPatient;
         break;
     }
     case 5: {
-
         Analysis newAnalysis;
         cin >> newAnalysis;
         availableAnalyses.push_back(newAnalysis);
@@ -133,7 +135,6 @@ void process_choice(int choice, vector<Analysis>& availableAnalyses, Patient& cu
         break;
     }
     case 7: {
-
         cout << "\nВведите номер анализа из базы, который нужно удалить из карты пациента (1 - " << availableAnalyses.size() << "): ";
         int index;
         cin >> index;
@@ -152,10 +153,13 @@ void process_choice(int choice, vector<Analysis>& availableAnalyses, Patient& cu
                 currentPatient -= dummyResult;
                 cout << "Результат успешно удален из карты!\n";
             }
-            break;
         }
+        else {
+            cout << "Неверный номер анализа!\n";
+        }
+        break;
+    }
     case 8: {
-
         if (availableAnalyses.size() < 2) {
             cout << "Недостаточно анализов в базе для сравнения.\n";
             break;
