@@ -1,5 +1,5 @@
 #include "TestResult.h"
-
+#define CRITICAL 1.5
 using namespace std;
 
 TestResult::TestResult(const Analysis& analysis, const string& date, double value)
@@ -35,6 +35,6 @@ ostream& operator<<(ostream& os, const TestResult& obj) {
 }
 
 bool is_critical(const TestResult& obj) {
-    double max_allowed = obj.analysis.get_max_normal() * 1.5;
+    double max_allowed = obj.analysis.get_max_normal() * CRITICAL;
     return obj.value > max_allowed;
 }

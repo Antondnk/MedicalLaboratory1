@@ -6,8 +6,10 @@
 #include "TestResult.h"
 #include "Patient.h"
 #include <cctype>
-
+#define MAXYEAR 2100
+#define MINYEAR 1900
 const int cleanbuf = 1000;
+
 using namespace std;
 
 bool isValidDate(const string& date) {
@@ -22,7 +24,7 @@ bool isValidDate(const string& date) {
     int year = stoi(date.substr(6, 4));
     if (day < 1 || day > 31) return false;
     if (month < 1 || month > 12) return false;
-    if (year < 1900 || year > 2100) return false;
+    if (year < MINYEAR || year > MAXYEAR) return false;
     return true;
 }
 
