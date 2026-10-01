@@ -17,13 +17,16 @@ private:
     void clear_memory();
     void display_analyses() const;
     void add_analysis();
+    void delete_analysis();                  // Удаление вида анализа (Очистка динамической памяти)
     void add_patient();
-    void add_test_result_to_patient();
+    void delete_patient();                    // Удаление пациента
+    void add_test_result_to_patient();        // Добавление результата (Оператор +=)
+    void remove_test_result_from_patient(); // Удаление результата (Оператор -=)
     void display_patients() const;
 
 public:
     Menu();
-    ~Menu(); // Деструктор очищает динамическую память
+    ~Menu(); // Деструктор для очистки памяти
 
     void run();
 };
