@@ -40,4 +40,6 @@ public:
 
     // Дружественный оператор вывода
     friend ostream& operator<<(ostream& os, const Analysis& obj);
+
+    friend istream& operator>>(istream& is, Analysis& obj);
 };

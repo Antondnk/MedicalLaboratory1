@@ -42,3 +42,18 @@ ostream& operator<<(ostream& os, const Analysis& obj) {
     obj.print_info(os); // Полиморфный вызов через ссылку
     return os;
 }
+
+istream& operator>>(istream& is, Analysis& obj) {
+    cout << "Введите название анализа: ";
+    getline(is, obj.name);
+    cout << "Введите категорию: ";
+    getline(is, obj.category);
+    cout << "Введите базовую стоимость: ";
+    is >> obj.baseCost;
+    cout << "Введите нижнюю границу нормы: ";
+    is >> obj.minNormal;
+    cout << "Введите верхнюю границу нормы: ";
+    is >> obj.maxNormal;
+    is.ignore(10000, '\n'); // Очистка остаточного символа новой строки
+    return is;
+}

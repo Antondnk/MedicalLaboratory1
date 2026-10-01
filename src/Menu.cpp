@@ -54,16 +54,27 @@ double Menu::read_double(const string& prompt, double minVal) const {
 bool Menu::is_valid_date(const string& date) const {
     if (date.length() != 10) return false;
     if (date[2] != '.' || date[5] != '.') return false;
+
     for (int i = 0; i < 10; ++i) {
         if (i == 2 || i == 5) continue;
         if (date[i] < '0' || date[i] > '9') return false;
     }
+
     int day = stoi(date.substr(0, 2));
     int month = stoi(date.substr(3, 2));
     int year = stoi(date.substr(6, 4));
+
     if (month < 1 || month > 12) return false;
-    if (day < 1 || day > 31) return false;
     if (year < 1900 || year > 2100) return false;
+
+    int days_in_month[] = { 0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+
+    if ((year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)) {
+        days_in_month[2] = 29;
+    }
+
+    if (day < 1 || day > days_in_month[month]) return false;
+
     return true;
 }
 
@@ -104,9 +115,18 @@ void Menu::change_analysis_cost() {
 }
 
 void Menu::add_patient() {
-    cout << "Введите ФИО нового пациента: ";
     string name;
-    getline(cin, name);
+    while (true) {
+        cout << "Введите ФИО нового пациента: ";
+        getline(cin, name);
+
+        // Проверяем, что строка не пустая и состоит не только из пробелов
+        if (!name.empty() && name.find_first_not_of(" \t") != string::npos) {
+            break;
+        }
+        cout << "Ошибка: ФИО пациента не может быть пустым!\n";
+    }
+
     patients.push_back(Patient(name));
     cout << "Пациент \"" << name << "\" успешно добавлен в базу!\n";
 }
@@ -137,7 +157,7 @@ void Menu::take_test() {
     display_analyses();
     int a_idx = read_int("Введите номер анализа (1 - " + to_string(availableAnalyses.size()) + "): ", 1, availableAnalyses.size()) - 1;
     string date = read_date("Введите дату сдачи (например, 10.09.2026): ");
-    double val = read_double("Введите полученный результат (число): ", -10000.0);
+    double val = read_double("Введите полученный результат (число): ", 0.0);
 
     TestResult result(availableAnalyses[a_idx], date, val);
 
@@ -179,7 +199,7 @@ void Menu::add_analysis() {
     getline(cin, category);
 
     double baseCost = read_double("Введите базовую стоимость: ", 0.0);
-    double minN = read_double("Введите нижнюю границу нормы: ", -10000.0);
+    double minN = read_double("Введите нижнюю границу нормы: ", 0.0);
     double maxN = read_double("Введите верхнюю границу нормы: ", minN);
 
     Analysis* newAnalysis = nullptr;
@@ -218,6 +238,19 @@ void Menu::remove_analysis() {
     display_analyses();
     int idx = read_int("Выберите номер анализа для удаления: ", 1, availableAnalyses.size()) - 1;
 
+    Analysis* targetAnalysis = availableAnalyses[idx];
+
+    for (const auto& patient : patients) {
+        const auto& results = patient.get_results();
+        for (const auto& res : results) {
+            if (res.get_analysis() == targetAnalysis) {
+                cout << "ОШИБКА: Этот анализ уже сдан пациентом (" << patient.get_full_name()
+                    << "). Удаление приведет к повреждению медицинской карты!\n";
+                return;
+            }
+        }
+    }
+
     delete availableAnalyses[idx];
     availableAnalyses.erase(availableAnalyses.begin() + idx);
     cout << "Вид анализа удален из базы.\n";
@@ -236,6 +269,9 @@ void Menu::remove_test_result() {
             cout << i + 1 << ". " << patients[i].get_full_name() << "\n";
         }
         p_idx = read_int("Ваш выбор: ", 1, patients.size()) - 1;
+    }
+    else {
+        cout << "\nВыбран пациент: " << patients[0].get_full_name() << "\n";
     }
 
     const auto& results = patients[p_idx].get_results();
