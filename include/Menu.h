@@ -31,7 +31,7 @@ private:
     void remove_test_result();
     void compare_analyses() const;
     void add_patient(); // Новая функция добавления пациента
-
+    int select_patient() const;
 public:
     Menu();
     ~Menu();

@@ -1,7 +1,7 @@
 #include "UrineAnalysis.h"
 
 UrineAnalysis::UrineAnalysis()
-    : Analysis(), isSterileContainer(false), containerCost(0.0) {
+    : UrineAnalysis("", "", 0.0, 0.0, 0.0, false, 0.0) {
 }
 
 UrineAnalysis::UrineAnalysis(const string& name, const string& category, double baseCost,

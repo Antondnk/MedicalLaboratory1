@@ -1,7 +1,7 @@
 #include "BloodAnalysis.h"
 
 BloodAnalysis::BloodAnalysis()
-    : Analysis(), requiresFasting(false), reagentCost(0.0) {
+    : BloodAnalysis("", "", 0.0, 0.0, 0.0, false, 0.0) {
 }
 
 BloodAnalysis::BloodAnalysis(const string& name, const string& category, double baseCost,

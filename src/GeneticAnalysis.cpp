@@ -1,7 +1,7 @@
 #include "GeneticAnalysis.h"
 
 GeneticAnalysis::GeneticAnalysis()
-    : Analysis(), targetGene(""), techMultiplier(1.0) {
+    : GeneticAnalysis("", "", 0.0, 0.0, 0.0, "", 1.0) {
 }
 
 GeneticAnalysis::GeneticAnalysis(const string& name, const string& category, double baseCost,

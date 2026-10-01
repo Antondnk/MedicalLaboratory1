@@ -141,18 +141,7 @@ void Menu::take_test() {
         return;
     }
 
-    int p_idx = 0;
-    // Если пациентов больше одного - предлагаем выбор
-    if (patients.size() > 1) {
-        cout << "\nВыберите пациента, который сдает анализ:\n";
-        for (size_t i = 0; i < patients.size(); ++i) {
-            cout << i + 1 << ". " << patients[i].get_full_name() << "\n";
-        }
-        p_idx = read_int("Ваш выбор: ", 1, patients.size()) - 1;
-    }
-    else {
-        cout << "\nВыбран пациент: " << patients[0].get_full_name() << "\n";
-    }
+    int p_idx = select_patient();
 
     display_analyses();
     int a_idx = read_int("Введите номер анализа (1 - " + to_string(availableAnalyses.size()) + "): ", 1, availableAnalyses.size()) - 1;
@@ -262,17 +251,7 @@ void Menu::remove_test_result() {
         return;
     }
 
-    int p_idx = 0;
-    if (patients.size() > 1) {
-        cout << "\nВыберите пациента для удаления результата:\n";
-        for (size_t i = 0; i < patients.size(); ++i) {
-            cout << i + 1 << ". " << patients[i].get_full_name() << "\n";
-        }
-        p_idx = read_int("Ваш выбор: ", 1, patients.size()) - 1;
-    }
-    else {
-        cout << "\nВыбран пациент: " << patients[0].get_full_name() << "\n";
-    }
+    int p_idx = select_patient();
 
     const auto& results = patients[p_idx].get_results();
     if (results.empty()) {
@@ -321,6 +300,19 @@ void Menu::compare_analyses() const {
     else {
         cout << "Итоговая стоимость анализов ОДИНАКОВА (" << a1.calculate_total_cost() << " руб.).\n";
     }
+}
+
+int Menu::select_patient() const {
+    if (patients.empty()) return -1;
+    if (patients.size() == 1) {
+        cout << "\nВыбран пациент: " << patients[0].get_full_name() << "\n";
+        return 0;
+    }
+    cout << "\nВыберите пациента:\n";
+    for (size_t i = 0; i < patients.size(); ++i) {
+        cout << i + 1 << ". " << patients[i].get_full_name() << "\n";
+    }
+    return read_int("Ваш выбор: ", 1, patients.size()) - 1;
 }
 
 void Menu::run() {
