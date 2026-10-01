@@ -1,40 +1,59 @@
 #include "TestResult.h"
-#define CRITICAL 1.5
-using namespace std;
 
-TestResult::TestResult(const Analysis& analysis, const string& date, double value)
+TestResult::TestResult()
+    : analysis(nullptr), date(""), value(0.0), status("Неизвестно") {
+}
+
+TestResult::TestResult(const Analysis* analysis, const string& date, double value)
     : analysis(analysis), date(date), value(value) {
     calculate_status();
 }
 
 void TestResult::calculate_status() {
-    if (value < analysis.get_min_normal()) {
+    if (!analysis) {
+        status = "Нет данных об анализе";
+        return;
+    }
+    if (value < analysis->get_min_normal()) {
         status = "Ниже нормы";
     }
-    else if (value > analysis.get_max_normal()) {
+    else if (value > analysis->get_max_normal()) {
         status = "Выше нормы";
     }
     else {
-        status = "В норме";
+        status = "Норма";
     }
 }
 
+const Analysis* TestResult::get_analysis() const { return analysis; }
 string TestResult::get_date() const { return date; }
-string TestResult::get_analysis_name() const { return analysis.get_name(); }
 double TestResult::get_value() const { return value; }
 string TestResult::get_status() const { return status; }
 
 bool TestResult::operator==(const TestResult& other) const {
-    return (this->get_analysis_name() == other.get_analysis_name()) && (this->date == other.date);
+    if (!analysis || !other.analysis) return false;
+    return (analysis->get_name() == other.analysis->get_name()) && (date == other.date);
 }
 
 ostream& operator<<(ostream& os, const TestResult& obj) {
-    os << "[" << obj.date << "] Анализ: " << obj.analysis.get_name()
-        << " | Результат: " << obj.value << " (" << obj.status << ")";
+    os << "Дата: " << obj.date << " | ";
+    if (obj.analysis) {
+        os << "Анализ: " << obj.analysis->get_name()
+            << " [" << obj.analysis->get_type() << "]";
+    }
+    else {
+        os << "Анализ: Неизвестен";
+    }
+    os << " | Результат: " << obj.value
+        << " | Статус: " << obj.status;
     return os;
 }
 
 bool is_critical(const TestResult& obj) {
-    double max_allowed = obj.analysis.get_max_normal() * CRITICAL;
-    return obj.value > max_allowed;
+    if (!obj.analysis) return false;
+    double minN = obj.analysis->get_min_normal();
+    double maxN = obj.analysis->get_max_normal();
+
+    // Отклонение более чем на 20% от границ нормы считается критическим
+    return (obj.value < minN * 0.8) || (obj.value > maxN * 1.2);
 }

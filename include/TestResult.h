@@ -7,7 +7,7 @@ using namespace std;
 
 class TestResult {
 private:
-    Analysis analysis;
+    const Analysis* analysis; // Полиморфный указатель на абстрактный базовый класс
     string date;
     double value;
     string status;
@@ -15,16 +15,16 @@ private:
     void calculate_status();
 
 public:
-    TestResult(const Analysis& analysis, const string& date, double value);
+    TestResult();
+    TestResult(const Analysis* analysis, const string& date, double value);
 
+    const Analysis* get_analysis() const;
     string get_date() const;
-    string get_analysis_name() const;
     double get_value() const;
     string get_status() const;
 
     bool operator==(const TestResult& other) const;
 
     friend ostream& operator<<(ostream& os, const TestResult& obj);
-
     friend bool is_critical(const TestResult& obj);
 };
