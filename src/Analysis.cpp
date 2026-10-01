@@ -24,10 +24,10 @@ void Analysis::set_base_cost(double newCost) {
 
 void Analysis::print_info(ostream& os) const {
     os << "[" << get_type() << "] " << name
-        << " | Категория: " << category
-        << " | Итоговая стоимость: " << calculate_total_cost() << " руб."
+        << " \n\t Категория: " << category
+        << " \n\t Итоговая стоимость: " << calculate_total_cost() << " руб."
         << " (Базовая: " << baseCost << " руб.)"
-        << " | Норма: [" << minNormal << " - " << maxNormal << "]";
+        << " \n\t Норма: [" << minNormal << " - " << maxNormal << "]";
 }
 
 bool Analysis::operator>(const Analysis& other) const {

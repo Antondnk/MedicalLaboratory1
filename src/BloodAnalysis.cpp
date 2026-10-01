@@ -20,8 +20,8 @@ double BloodAnalysis::calculate_total_cost() const {
 
 void BloodAnalysis::print_info(ostream& os) const {
     Analysis::print_info(os); // Вызов базовой печати
-    os << " | Натощак: " << (requiresFasting ? "Да" : "Нет")
-        << " | Реагенты: " << reagentCost << " руб.";
+    os << " \n\t Натощак: " << (requiresFasting ? "Да" : "Нет")
+        << " \n\t Реагенты: " << reagentCost << " руб.";
 }
 
 bool BloodAnalysis::get_requires_fasting() const { return requiresFasting; }

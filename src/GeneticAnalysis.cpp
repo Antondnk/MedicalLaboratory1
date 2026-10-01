@@ -20,8 +20,8 @@ double GeneticAnalysis::calculate_total_cost() const {
 
 void GeneticAnalysis::print_info(ostream& os) const {
     Analysis::print_info(os); // Вызов базовой печати
-    os << " | Ген-маркер: " << targetGene
-        << " | Коэфф. сложности: x" << techMultiplier;
+    os << " \n\t Ген-маркер: " << targetGene
+        << " \n\t Коэфф. сложности: x" << techMultiplier;
 }
 
 string GeneticAnalysis::get_target_gene() const { return targetGene; }

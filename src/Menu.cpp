@@ -1,11 +1,12 @@
 #include "Menu.h"
 #include <iostream>
-#include <limits>
 
 using namespace std;
 
 Menu::Menu() {
-    // Начальные тестовые данные разных типов
+    // Пациент по умолчанию, чтобы база не была пустой на старте
+    patients.push_back(Patient("Иванов Иван Иванович"));
+
     availableAnalyses.push_back(new BloodAnalysis("Общий анализ крови", "Гематология", 500.0, 4.0, 9.0, true, 150.0));
     availableAnalyses.push_back(new UrineAnalysis("Анализ мочи по Нечипоренко", "Клиника", 300.0, 0.0, 2000.0, true, 50.0));
     availableAnalyses.push_back(new GeneticAnalysis("ПЦР-тест на инфекции", "Генетика", 1200.0, 0.0, 0.0, "BRCA1", 1.5));
@@ -17,21 +18,150 @@ Menu::~Menu() {
 
 void Menu::clear_memory() {
     for (Analysis* ptr : availableAnalyses) {
-        delete ptr; // Освобождение динамической памяти
+        delete ptr;
     }
     availableAnalyses.clear();
 }
 
+int Menu::read_int(const string& prompt, int minVal, int maxVal) const {
+    int value;
+    while (true) {
+        cout << prompt;
+        if (cin >> value && value >= minVal && value <= maxVal) {
+            cin.ignore(10000, '\n');
+            return value;
+        }
+        cout << "Ошибка! Введите целое число от " << minVal << " до " << maxVal << ".\n";
+        cin.clear();
+        cin.ignore(10000, '\n');
+    }
+}
+
+double Menu::read_double(const string& prompt, double minVal) const {
+    double value;
+    while (true) {
+        cout << prompt;
+        if (cin >> value && value >= minVal) {
+            cin.ignore(10000, '\n');
+            return value;
+        }
+        cout << "Ошибка! Введите числовое значение (не меньше " << minVal << ").\n";
+        cin.clear();
+        cin.ignore(10000, '\n');
+    }
+}
+
+bool Menu::is_valid_date(const string& date) const {
+    if (date.length() != 10) return false;
+    if (date[2] != '.' || date[5] != '.') return false;
+    for (int i = 0; i < 10; ++i) {
+        if (i == 2 || i == 5) continue;
+        if (date[i] < '0' || date[i] > '9') return false;
+    }
+    int day = stoi(date.substr(0, 2));
+    int month = stoi(date.substr(3, 2));
+    int year = stoi(date.substr(6, 4));
+    if (month < 1 || month > 12) return false;
+    if (day < 1 || day > 31) return false;
+    if (year < 1900 || year > 2100) return false;
+    return true;
+}
+
+string Menu::read_date(const string& prompt) const {
+    string date;
+    while (true) {
+        cout << prompt;
+        getline(cin, date);
+        if (is_valid_date(date)) {
+            return date;
+        }
+        cout << "Ошибка ввода! Введите дату в формате ДД.ММ.ГГГГ (например, 10.09.2026).\n";
+    }
+}
+
 void Menu::display_analyses() const {
     if (availableAnalyses.empty()) {
-        cout << "Список анализов пуст.\n";
+        cout << "Список доступных анализов пуст.\n";
         return;
     }
     cout << "\n=== СПИСОК ДОСТУПНЫХ АНАЛИЗОВ ===\n";
     for (size_t i = 0; i < availableAnalyses.size(); ++i) {
-        cout << i + 1 << ". ";
-        availableAnalyses[i]->print_info(cout); // Полиморфный вызов
-        cout << "\n";
+        cout << i + 1 << ". " << *availableAnalyses[i] << "\n";
+    }
+}
+
+void Menu::change_analysis_cost() {
+    if (availableAnalyses.empty()) {
+        cout << "Список анализов пуст.\n";
+        return;
+    }
+    display_analyses();
+    int idx = read_int("Выберите номер анализа для изменения стоимости: ", 1, availableAnalyses.size()) - 1;
+    double newCost = read_double("Введите новую базовую стоимость: ", 0.0);
+
+    availableAnalyses[idx]->set_base_cost(newCost);
+    cout << "Базовая стоимость анализа успешно изменена!\n";
+}
+
+void Menu::add_patient() {
+    cout << "Введите ФИО нового пациента: ";
+    string name;
+    getline(cin, name);
+    patients.push_back(Patient(name));
+    cout << "Пациент \"" << name << "\" успешно добавлен в базу!\n";
+}
+
+void Menu::take_test() {
+    if (availableAnalyses.empty()) {
+        cout << "Список анализов пуст!\n";
+        return;
+    }
+    if (patients.empty()) {
+        cout << "Сначала добавьте хотя бы одного пациента (Пункт 9)!\n";
+        return;
+    }
+
+    int p_idx = 0;
+    // Если пациентов больше одного - предлагаем выбор
+    if (patients.size() > 1) {
+        cout << "\nВыберите пациента, который сдает анализ:\n";
+        for (size_t i = 0; i < patients.size(); ++i) {
+            cout << i + 1 << ". " << patients[i].get_full_name() << "\n";
+        }
+        p_idx = read_int("Ваш выбор: ", 1, patients.size()) - 1;
+    }
+    else {
+        cout << "\nВыбран пациент: " << patients[0].get_full_name() << "\n";
+    }
+
+    display_analyses();
+    int a_idx = read_int("Введите номер анализа (1 - " + to_string(availableAnalyses.size()) + "): ", 1, availableAnalyses.size()) - 1;
+    string date = read_date("Введите дату сдачи (например, 10.09.2026): ");
+    double val = read_double("Введите полученный результат (число): ", -10000.0);
+
+    TestResult result(availableAnalyses[a_idx], date, val);
+
+    if (patients[p_idx].has_result(result)) {
+        cout << " Ошибка: У пациента уже есть этот результат на эту дату!\n";
+    }
+    else {
+        patients[p_idx] += result;
+        cout << " Результат анализа успешно добавлен пациенту!\n";
+
+        if (is_critical(result)) {
+            cout << " ВНИМАНИЕ: Результат является КРИТИЧЕСКИМ (отклонение от нормы > 20%)!\n";
+        }
+    }
+}
+
+void Menu::display_patient_card() const {
+    if (patients.empty()) {
+        cout << "Список пациентов пуст.\n";
+        return;
+    }
+    cout << "\n=== МЕДИЦИНСКИЕ КАРТЫ ПАЦИЕНТОВ ===\n";
+    for (const auto& patient : patients) {
+        cout << patient << "\n"; // Демонстрация оператора <<
     }
 }
 
@@ -40,195 +170,77 @@ void Menu::add_analysis() {
     cout << "1. Анализ крови\n";
     cout << "2. Анализ мочи\n";
     cout << "3. Генетический / ПЦР анализ\n";
-    cout << "Ваш выбор: ";
-
-    int typeChoice;
-    cin >> typeChoice;
-
-    if (typeChoice < 1 || typeChoice > 3) {
-        cout << "Неверный выбор типа анализа!\n";
-        return;
-    }
-
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    int typeChoice = read_int("Ваш выбор: ", 1, 3);
 
     string name, category;
-    double baseCost, minN, maxN;
-
     cout << "Введите название анализа: ";
     getline(cin, name);
     cout << "Введите категорию: ";
     getline(cin, category);
-    cout << "Введите базовую стоимость: ";
-    cin >> baseCost;
-    cout << "Введите нижнюю границу нормы: ";
-    cin >> minN;
-    cout << "Введите верхнюю границу нормы: ";
-    cin >> maxN;
+
+    double baseCost = read_double("Введите базовую стоимость: ", 0.0);
+    double minN = read_double("Введите нижнюю границу нормы: ", -10000.0);
+    double maxN = read_double("Введите верхнюю границу нормы: ", minN);
 
     Analysis* newAnalysis = nullptr;
 
     if (typeChoice == 1) {
-        bool fasting;
-        double reagentCost;
-        cout << "Требуется сдача натощак (1 - Да, 0 - Нет): ";
-        cin >> fasting;
-        cout << "Введите стоимость реагентов: ";
-        cin >> reagentCost;
-
-        newAnalysis = new BloodAnalysis(name, category, baseCost, minN, maxN, fasting, reagentCost);
+        int fastingInt = read_int("Требуется сдача натощак (1 - Да, 0 - Нет): ", 0, 1);
+        double reagentCost = read_double("Введите стоимость реагентов (0 если нет): ", 0.0);
+        newAnalysis = new BloodAnalysis(name, category, baseCost, minN, maxN, fastingInt == 1, reagentCost);
     }
     else if (typeChoice == 2) {
-        bool sterile;
-        double containerCost;
-        cout << "Нужен стерильный контейнер (1 - Да, 0 - Нет): ";
-        cin >> sterile;
-        cout << "Введите стоимость контейнера: ";
-        cin >> containerCost;
-
-        newAnalysis = new UrineAnalysis(name, category, baseCost, minN, maxN, sterile, containerCost);
+        int sterileInt = read_int("Нужен стерильный контейнер (1 - Да, 0 - Нет): ", 0, 1);
+        double containerCost = 0.0;
+        if (sterileInt == 1) { // Логическая проверка: цена нужна только если контейнер есть
+            containerCost = read_double("Введите стоимость контейнера: ", 0.0);
+        }
+        newAnalysis = new UrineAnalysis(name, category, baseCost, minN, maxN, sterileInt == 1, containerCost);
     }
     else if (typeChoice == 3) {
         string gene;
-        double multiplier;
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
         cout << "Введите ген-маркер: ";
         getline(cin, gene);
-        cout << "Введите коэффициент сложности (например, 1.5): ";
-        cin >> multiplier;
-
+        double multiplier = read_double("Введите коэффициент сложности (например, 1.5): ", 0.1);
         newAnalysis = new GeneticAnalysis(name, category, baseCost, minN, maxN, gene, multiplier);
     }
 
     if (newAnalysis) {
         availableAnalyses.push_back(newAnalysis);
-        cout << "Анализ успешно добавлен!\n";
+        cout << "Новый вид анализа успешно добавлен в базу!\n";
     }
 }
-
-void Menu::delete_analysis() {
+void Menu::remove_analysis() {
     if (availableAnalyses.empty()) {
         cout << "Список анализов пуст.\n";
         return;
     }
     display_analyses();
-    cout << "Выберите номер анализа для удаления: ";
-    int index;
-    cin >> index;
-    if (index < 1 || index > static_cast<int>(availableAnalyses.size())) {
-        cout << "Неверный номер!\n";
-        return;
-    }
+    int idx = read_int("Выберите номер анализа для удаления: ", 1, availableAnalyses.size()) - 1;
 
-    // Удаляем объект из динамической памяти перед исключением из вектора
-    delete availableAnalyses[index - 1];
-    availableAnalyses.erase(availableAnalyses.begin() + (index - 1));
-    cout << "Вид анализа успешно удален из системы.\n";
+    delete availableAnalyses[idx];
+    availableAnalyses.erase(availableAnalyses.begin() + idx);
+    cout << "Вид анализа удален из базы.\n";
 }
 
-void Menu::add_patient() {
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-    string name;
-    cout << "Введите ФИО пациента: ";
-    getline(cin, name);
-
-    patients.push_back(Patient(name));
-    cout << "Пациент добавлен!\n";
-}
-
-void Menu::delete_patient() {
-    if (patients.empty()) {
-        cout << "Список пациентов пуст.\n";
-        return;
-    }
-    cout << "\nВыберите пациента для удаления:\n";
-    for (size_t i = 0; i < patients.size(); ++i) {
-        cout << i + 1 << ". " << patients[i].get_full_name() << "\n";
-    }
-    cout << "Ваш выбор: ";
-    int index;
-    cin >> index;
-    if (index < 1 || index > static_cast<int>(patients.size())) {
-        cout << "Неверный номер!\n";
-        return;
-    }
-
-    patients.erase(patients.begin() + (index - 1));
-    cout << "Пациент успешно удален.\n";
-}
-
-void Menu::add_test_result_to_patient() {
-    if (patients.empty()) {
-        cout << "Список пациентов пуст!\n";
-        return;
-    }
-    if (availableAnalyses.empty()) {
-        cout << "Список анализов пуст!\n";
-        return;
-    }
-
-    cout << "\nВыберите пациента:\n";
-    for (size_t i = 0; i < patients.size(); ++i) {
-        cout << i + 1 << ". " << patients[i].get_full_name() << "\n";
-    }
-    int pChoice;
-    cin >> pChoice;
-    if (pChoice < 1 || pChoice > static_cast<int>(patients.size())) {
-        cout << "Неверный выбор!\n";
-        return;
-    }
-
-    display_analyses();
-    cout << "Выберите номер анализа: ";
-    int aChoice;
-    cin >> aChoice;
-    if (aChoice < 1 || aChoice > static_cast<int>(availableAnalyses.size())) {
-        cout << "Неверный выбор!\n";
-        return;
-    }
-
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-    string date;
-    double val;
-    cout << "Введите дату сдачи (ГГГГ-ММ-ДД): ";
-    getline(cin, date);
-    cout << "Введите полученный результат: ";
-    cin >> val;
-
-    TestResult result(availableAnalyses[aChoice - 1], date, val);
-    Patient& selectedPatient = patients[pChoice - 1];
-
-    if (selectedPatient.has_result(result)) {
-        cout << " Ошибка: У пациента уже зарегистрирован такой результат анализа на эту дату!\n";
-    }
-    else {
-        selectedPatient += result; // Используем перегруженный оператор +=
-        cout << " Результат успешно добавлен пациенту.\n";
-    }
-}
-
-void Menu::remove_test_result_from_patient() {
+void Menu::remove_test_result() {
     if (patients.empty()) {
         cout << "Список пациентов пуст!\n";
         return;
     }
 
-    cout << "\nВыберите пациента:\n";
-    for (size_t i = 0; i < patients.size(); ++i) {
-        cout << i + 1 << ". " << patients[i].get_full_name() << "\n";
-    }
-    int pChoice;
-    cin >> pChoice;
-    if (pChoice < 1 || pChoice > static_cast<int>(patients.size())) {
-        cout << "Неверный выбор!\n";
-        return;
+    int p_idx = 0;
+    if (patients.size() > 1) {
+        cout << "\nВыберите пациента для удаления результата:\n";
+        for (size_t i = 0; i < patients.size(); ++i) {
+            cout << i + 1 << ". " << patients[i].get_full_name() << "\n";
+        }
+        p_idx = read_int("Ваш выбор: ", 1, patients.size()) - 1;
     }
 
-    Patient& selectedPatient = patients[pChoice - 1];
-    const auto& results = selectedPatient.get_results();
-
+    const auto& results = patients[p_idx].get_results();
     if (results.empty()) {
-        cout << "У этого пациента нет зарегистрированных результатов анализов.\n";
+        cout << "У пациента нет результатов анализов для удаления.\n";
         return;
     }
 
@@ -236,57 +248,73 @@ void Menu::remove_test_result_from_patient() {
     for (size_t i = 0; i < results.size(); ++i) {
         cout << i + 1 << ". " << results[i] << "\n";
     }
-    cout << "Выберите номер результата для удаления: ";
-    int rChoice;
-    cin >> rChoice;
-    if (rChoice < 1 || rChoice > static_cast<int>(results.size())) {
-        cout << "Неверный выбор!\n";
-        return;
-    }
 
-    TestResult target = results[rChoice - 1];
-    selectedPatient -= target; // Демонстрация работы перегруженного оператора -=
-    cout << "Результат анализа успешно удален у пациента.\n";
+    int idx = read_int("Выберите номер результата для удаления: ", 1, results.size()) - 1;
+    TestResult target = results[idx];
+
+    patients[p_idx] -= target;
+    cout << "Результат анализа удален у пациента.\n";
 }
 
-void Menu::display_patients() const {
-    if (patients.empty()) {
-        cout << "Список пациентов пуст.\n";
+void Menu::compare_analyses() const {
+    if (availableAnalyses.size() < 2) {
+        cout << "Для сравнения нужно минимум 2 анализа в базе!\n";
         return;
     }
-    cout << "\n=== СПИСОК ПАЦИЕНТОВ И ИХ РЕЗУЛЬТАТОВ ===\n";
-    for (const auto& patient : patients) {
-        cout << patient << "\n";
+    display_analyses();
+    int idx1 = read_int("Выберите номер первого анализа: ", 1, availableAnalyses.size()) - 1;
+    int idx2 = read_int("Выберите номер второго анализа: ", 1, availableAnalyses.size()) - 1;
+
+    if (idx1 == idx2) {
+        cout << "Вы выбрали один и тот же анализ!\n";
+        return;
+    }
+
+    const Analysis& a1 = *availableAnalyses[idx1];
+    const Analysis& a2 = *availableAnalyses[idx2];
+
+    cout << "\nРезультат сравнения итоговых стоимостей:\n";
+    if (a1 > a2) {
+        cout << "\"" << a1.get_name() << "\" (" << a1.calculate_total_cost() << " руб.) ДОРОЖЕ, чем \""
+            << a2.get_name() << "\" (" << a2.calculate_total_cost() << " руб.).\n";
+    }
+    else if (a1 < a2) {
+        cout << "\"" << a1.get_name() << "\" (" << a1.calculate_total_cost() << " руб.) ДЕШЕВЛЕ, чем \""
+            << a2.get_name() << "\" (" << a2.calculate_total_cost() << " руб.).\n";
+    }
+    else {
+        cout << "Итоговая стоимость анализов ОДИНАКОВА (" << a1.calculate_total_cost() << " руб.).\n";
     }
 }
 
 void Menu::run() {
-    int choice = 0;
-    while (choice != 9) {
-        cout << "\n================ МЕНЮ ================\n";
-        cout << "1. Показать список доступных анализов\n";
-        cout << "2. Добавить новый вид анализа\n";
-        cout << "3. Удалить вид анализа\n";
-        cout << "4. Добавить пациента\n";
-        cout << "5. Удалить пациента\n";
-        cout << "6. Внести результат анализа пациенту (+=)\n";
-        cout << "7. Удалить результат анализа у пациента (-=)\n";
-        cout << "8. Показать карточки всех пациентов\n";
-        cout << "9. Выход\n";
-        cout << "Ваш выбор: ";
-        cin >> choice;
+    int choice = -1;
+    while (choice != 0) {
+        cout << "\n--- ГЛАВНОЕ МЕНЮ ---\n";
+        cout << "1. Показать список доступных анализов (демо <<)\n";
+        cout << "2. Изменить стоимость анализа\n";
+        cout << "3. Сдать анализ (демо += и friend is_critical)\n";
+        cout << "4. Показать медицинские карты пациентов (демо <<)\n";
+        cout << "5. Добавить новый вид анализа (демо >>)\n";
+        cout << "6. Удалить вид анализа из базы\n";
+        cout << "7. Удалить результат анализа у пациента (демо -=)\n";
+        cout << "8. Сравнить стоимость двух анализов (демо > и <)\n";
+        cout << "9. Добавить нового пациента\n";
+        cout << "0. Выход\n";
+
+        choice = read_int("Выберите действие: ", 0, 9);
 
         switch (choice) {
         case 1: display_analyses(); break;
-        case 2: add_analysis(); break;
-        case 3: delete_analysis(); break;
-        case 4: add_patient(); break;
-        case 5: delete_patient(); break;
-        case 6: add_test_result_to_patient(); break;
-        case 7: remove_test_result_from_patient(); break;
-        case 8: display_patients(); break;
-        case 9: cout << "Завершение работы программы...\n"; break;
-        default: cout << "Неверная команда!\n"; break;
+        case 2: change_analysis_cost(); break;
+        case 3: take_test(); break;
+        case 4: display_patient_card(); break;
+        case 5: add_analysis(); break;
+        case 6: remove_analysis(); break;
+        case 7: remove_test_result(); break;
+        case 8: compare_analyses(); break;
+        case 9: add_patient(); break;
+        case 0: cout << "Завершение работы программы...\n"; break;
         }
     }
 }

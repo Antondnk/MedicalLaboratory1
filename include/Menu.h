@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <string>
 #include "Analysis.h"
 #include "BloodAnalysis.h"
 #include "UrineAnalysis.h"
@@ -11,22 +12,29 @@ using namespace std;
 
 class Menu {
 private:
-    vector<Analysis*> availableAnalyses; // Полиморфный вектор указателей
-    vector<Patient> patients;
+    vector<Analysis*> availableAnalyses;
+    vector<Patient> patients; // Теперь здесь полноценный список пациентов
+
+    // Безопасный ввод
+    int read_int(const string& prompt, int minVal, int maxVal) const;
+    double read_double(const string& prompt, double minVal = 0.0) const;
+    string read_date(const string& prompt) const;
+    bool is_valid_date(const string& date) const;
 
     void clear_memory();
     void display_analyses() const;
+    void change_analysis_cost();
+    void take_test();
+    void display_patient_card() const;
     void add_analysis();
-    void delete_analysis();                  // Удаление вида анализа (Очистка динамической памяти)
-    void add_patient();
-    void delete_patient();                    // Удаление пациента
-    void add_test_result_to_patient();        // Добавление результата (Оператор +=)
-    void remove_test_result_from_patient(); // Удаление результата (Оператор -=)
-    void display_patients() const;
+    void remove_analysis();
+    void remove_test_result();
+    void compare_analyses() const;
+    void add_patient(); // Новая функция добавления пациента
 
 public:
     Menu();
-    ~Menu(); // Деструктор для очистки памяти
+    ~Menu();
 
     void run();
 };
