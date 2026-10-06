@@ -19,7 +19,7 @@ double UrineAnalysis::calculate_total_cost() const {
 }
 
 void UrineAnalysis::print_info(ostream& os) const {
-    Analysis::print_info(os); // Вызов базовой печати
+    Analysis::print_info(os);
     os << " \n\t Стерильный контейнер: " << (isSterileContainer ? "Да" : "Нет");
     if (isSterileContainer) {
         os << " (+" << containerCost << " руб.)";

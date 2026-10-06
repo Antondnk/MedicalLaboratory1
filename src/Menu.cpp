@@ -7,9 +7,9 @@ Menu::Menu() {
     // Пациент по умолчанию, чтобы база не была пустой на старте
     patients.push_back(Patient("Иванов Иван Иванович"));
 
-    availableAnalyses.push_back(new BloodAnalysis("Общий анализ крови", "Гематология", 500.0, 4.0, 9.0, true, 150.0));
-    availableAnalyses.push_back(new UrineAnalysis("Анализ мочи по Нечипоренко", "Клиника", 300.0, 0.0, 2000.0, true, 50.0));
-    availableAnalyses.push_back(new GeneticAnalysis("ПЦР-тест на инфекции", "Генетика", 1200.0, 0.0, 0.0, "BRCA1", 1.5));
+    availableAnalyses.push_back(new BloodAnalysis("Общий анализ крови", "Гематология", 18.0, 4.0, 9.0, true, 6.0));
+    availableAnalyses.push_back(new UrineAnalysis("Анализ мочи по Нечипоренко", "Клиника", 12.0, 0.0, 2000.0, true, 3.0));
+    availableAnalyses.push_back(new GeneticAnalysis("ПЦР-тест на инфекции", "Генетика", 80.0, 0.0, 0.0, "BRCA1", 1.5));
 }
 
 Menu::~Menu() {

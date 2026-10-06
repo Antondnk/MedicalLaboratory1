@@ -39,7 +39,7 @@ bool Analysis::operator<(const Analysis& other) const {
 }
 
 ostream& operator<<(ostream& os, const Analysis& obj) {
-    obj.print_info(os); // Полиморфный вызов через ссылку
+    obj.print_info(os);
     return os;
 }
 
@@ -54,6 +54,6 @@ istream& operator>>(istream& is, Analysis& obj) {
     is >> obj.minNormal;
     cout << "Введите верхнюю границу нормы: ";
     is >> obj.maxNormal;
-    is.ignore(10000, '\n'); // Очистка остаточного символа новой строки
+    is.ignore(10000, '\n');
     return is;
 }

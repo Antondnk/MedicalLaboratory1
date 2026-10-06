@@ -15,11 +15,11 @@ string BloodAnalysis::get_type() const {
 }
 
 double BloodAnalysis::calculate_total_cost() const {
-    return baseCost + reagentCost; // Реализация специфического расчета
+    return baseCost + reagentCost;
 }
 
 void BloodAnalysis::print_info(ostream& os) const {
-    Analysis::print_info(os); // Вызов базовой печати
+    Analysis::print_info(os);
     os << " \n\t Натощак: " << (requiresFasting ? "Да" : "Нет")
         << " \n\t Реагенты: " << reagentCost << " руб.";
 }

@@ -15,11 +15,11 @@ string GeneticAnalysis::get_type() const {
 }
 
 double GeneticAnalysis::calculate_total_cost() const {
-    return baseCost * techMultiplier; // Расчет с коэффициентом сложности
+    return baseCost * techMultiplier;
 }
 
 void GeneticAnalysis::print_info(ostream& os) const {
-    Analysis::print_info(os); // Вызов базовой печати
+    Analysis::print_info(os);
     os << " \n\t Ген-маркер: " << targetGene
         << " \n\t Коэфф. сложности: x" << techMultiplier;
 }
