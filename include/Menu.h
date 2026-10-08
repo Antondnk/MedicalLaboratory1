@@ -13,9 +13,8 @@ using namespace std;
 class Menu {
 private:
     vector<Analysis*> availableAnalyses;
-    vector<Patient> patients; // Теперь здесь полноценный список пациентов
+    vector<Patient> patients;
 
-    // Безопасный ввод
     int read_int(const string& prompt, int minVal, int maxVal) const;
     double read_double(const string& prompt, double minVal = 0.0) const;
     string read_date(const string& prompt) const;
@@ -30,7 +29,7 @@ private:
     void remove_analysis();
     void remove_test_result();
     void compare_analyses() const;
-    void add_patient(); // Новая функция добавления пациента
+    void add_patient();
     int select_patient() const;
 public:
     Menu();

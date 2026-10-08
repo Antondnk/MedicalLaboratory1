@@ -7,7 +7,7 @@ using namespace std;
 
 class TestResult {
 private:
-    const Analysis* analysis; // Полиморфный указатель на абстрактный базовый класс
+    const Analysis* analysis;
     string date;
     double value;
     string status;

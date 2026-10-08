@@ -54,6 +54,5 @@ bool is_critical(const TestResult& obj) {
     double minN = obj.analysis->get_min_normal();
     double maxN = obj.analysis->get_max_normal();
 
-    // Отклонение более чем на 20% от границ нормы считается критическим
     return (obj.value < minN * 0.8) || (obj.value > maxN * 1.2);
 }

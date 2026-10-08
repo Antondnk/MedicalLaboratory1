@@ -9,7 +9,6 @@ string Patient::get_full_name() const { return fullName; }
 
 const vector<TestResult>& Patient::get_results() const { return results; }
 
-// Булевая функция-проверка
 bool Patient::has_result(const TestResult& result) const {
     for (const auto& res : results) {
         if (res == result) {
@@ -19,13 +18,11 @@ bool Patient::has_result(const TestResult& result) const {
     return false;
 }
 
-// Добавление строго без cout
 Patient& Patient::operator+=(const TestResult& result) {
     results.push_back(result);
     return *this;
 }
 
-// Удаление строго без cout
 Patient& Patient::operator-=(const TestResult& result) {
     auto it = std::find(results.begin(), results.end(), result);
     if (it != results.end()) {

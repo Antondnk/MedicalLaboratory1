@@ -4,7 +4,6 @@
 using namespace std;
 
 Menu::Menu() {
-    // Пациент по умолчанию, чтобы база не была пустой на старте
     patients.push_back(Patient("Иванов Иван Иванович"));
 
     availableAnalyses.push_back(new BloodAnalysis("Общий анализ крови", "Гематология", 18.0, 4.0, 9.0, true, 6.0));
@@ -120,7 +119,6 @@ void Menu::add_patient() {
         cout << "Введите ФИО нового пациента: ";
         getline(cin, name);
 
-        // Проверяем, что строка не пустая и состоит не только из пробелов
         if (!name.empty() && name.find_first_not_of(" \t") != string::npos) {
             break;
         }
@@ -170,7 +168,7 @@ void Menu::display_patient_card() const {
     }
     cout << "\n=== МЕДИЦИНСКИЕ КАРТЫ ПАЦИЕНТОВ ===\n";
     for (const auto& patient : patients) {
-        cout << patient << "\n"; // Демонстрация оператора <<
+        cout << patient << "\n";
     }
 }
 
