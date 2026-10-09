@@ -1,4 +1,5 @@
 #include "GeneticAnalysis.h"
+#define COEFF 3
 
 GeneticAnalysis::GeneticAnalysis()
     : GeneticAnalysis("", "", 0.0, 0.0, 0.0, "", 1.0) {
@@ -29,5 +30,5 @@ string GeneticAnalysis::get_target_gene() const { return targetGene; }
 double GeneticAnalysis::get_tech_multiplier() const { return techMultiplier; }
 
 int GeneticAnalysis::estimate_processing_days() const {
-    return static_cast<int>(techMultiplier * 3.0) + 1;
+    return static_cast<int>(techMultiplier * COEFF);
 }
