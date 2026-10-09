@@ -18,4 +18,6 @@ public:
 
     string get_target_gene() const;
     double get_tech_multiplier() const;
+
+    int estimate_processing_days() const;
 };

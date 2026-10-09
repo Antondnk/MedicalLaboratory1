@@ -21,8 +21,16 @@ double BloodAnalysis::calculate_total_cost() const {
 void BloodAnalysis::print_info(ostream& os) const {
     Analysis::print_info(os);
     os << " \n\t Натощак: " << (requiresFasting ? "Да" : "Нет")
-        << " \n\t Реагенты: " << reagentCost << " руб.";
+        << " \n\t Реагенты: " << reagentCost << " руб."
+        << " \n\t Требуемое голодание: " << (requiresFasting ? "мин. 8 часов" : "не требуется");
 }
 
 bool BloodAnalysis::get_requires_fasting() const { return requiresFasting; }
 double BloodAnalysis::get_reagent_cost() const { return reagentCost; }
+
+bool BloodAnalysis::verify_fasting_compliance(int hoursFasted) const {
+    if (!requiresFasting) {
+        return true;
+    }
+    return hoursFasted >= 8; 
+}

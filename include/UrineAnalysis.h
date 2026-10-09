@@ -18,4 +18,6 @@ public:
 
     bool get_is_sterile_container() const;
     double get_container_cost() const;
+
+    int get_max_sample_validity_hours() const;
 };

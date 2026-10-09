@@ -24,7 +24,12 @@ void UrineAnalysis::print_info(ostream& os) const {
     if (isSterileContainer) {
         os << " (+" << containerCost << " руб.)";
     }
+    os << " \n\t Срок годности образца: " << get_max_sample_validity_hours() << " ч.";
 }
 
 bool UrineAnalysis::get_is_sterile_container() const { return isSterileContainer; }
 double UrineAnalysis::get_container_cost() const { return containerCost; }
+
+int UrineAnalysis::get_max_sample_validity_hours() const {
+    return isSterileContainer ? 24 : 2;
+}

@@ -18,4 +18,6 @@ public:
 
     bool get_requires_fasting() const;
     double get_reagent_cost() const;
+
+    bool verify_fasting_compliance(int hoursFasted) const;
 };
