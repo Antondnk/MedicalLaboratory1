@@ -13,53 +13,16 @@ public:
     Collection() = default;
     virtual ~Collection() = default;
 
-    void add(const T& item) {
-        items.push_back(item);
-    }
+    void add(const T& item);
+    void remove(int index);
+    T& get(int index);
+    const T& get(int index) const;
+    int size() const;
+    bool empty() const;
+    void clear();
+    void display() const;
 
-    void remove(int index) {
-        if (index < 0 || index >= static_cast<int>(items.size())) {
-            throw IndexOutOfBoundsException("Ошибка: Невозможно удалить элемент, индекс вне диапазона!");
-        }
-        items.erase(items.begin() + index);
-    }
-
-    T& get(int index) {
-        if (index < 0 || index >= static_cast<int>(items.size())) {
-            throw IndexOutOfBoundsException("Ошибка: Индекс элемента выходит за границы коллекции!");
-        }
-        return items[index];
-    }
-
-    const T& get(int index) const {
-        if (index < 0 || index >= static_cast<int>(items.size())) {
-            throw IndexOutOfBoundsException("Ошибка: Индекс элемента выходит за границы коллекции!");
-        }
-        return items[index];
-    }
-
-    int size() const {
-        return static_cast<int>(items.size());
-    }
-
-    bool empty() const {
-        return items.empty();
-    }
-
-    void clear() {
-        items.clear();
-    }
-
-    void display() const {
-        if (items.empty()) {
-            throw NotFoundException("Коллекция пуста!");
-        }
-        for (size_t i = 0; i < items.size(); ++i) {
-            std::cout << "[" << i + 1 << "]\n" << items[i] << "\n";
-        }
-    }
-
-    // Шаблонная функция для поиска элементов по заданному критерию (предикату)
+    // Шаблонный метод поиска по критерию
     template <typename Predicate>
     std::vector<T> find_by(Predicate pred) const {
         std::vector<T> result;
@@ -71,3 +34,6 @@ public:
         return result;
     }
 };
+
+// Подключение файла реализации шаблона
+#include "Collection.tpp"
