@@ -38,4 +38,8 @@ public:
     void demo_lab6_exceptions();
 
     void run();
+
+    void search_analyses_by_criteria() const;
+
+    void search_specific_analysis() const;
 };

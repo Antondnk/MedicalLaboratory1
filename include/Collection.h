@@ -21,8 +21,8 @@ public:
     bool empty() const;
     void clear();
     void display() const;
+    int find_object(const T& item) const;
 
-    // Шаблонный метод поиска по критерию
     template <typename Predicate>
     std::vector<T> find_by(Predicate pred) const {
         std::vector<T> result;
@@ -35,5 +35,4 @@ public:
     }
 };
 
-// Подключение файла реализации шаблона
 #include "Collection.tpp"

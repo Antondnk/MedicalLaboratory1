@@ -6,9 +6,9 @@ using namespace std;
 Menu::Menu() {
     patients.add(Patient("Иванов Иван Иванович"));
 
-    availableAnalyses.add(new BloodAnalysis("Общий анализ крови", "Гематология", 18.0, 4.0, 9.0, true, 6.0));
-    availableAnalyses.add(new UrineAnalysis("Анализ мочи по Нечипоренко", "Клиника", 12.0, 0.0, 2000.0, true, 3.0));
-    availableAnalyses.add(new GeneticAnalysis("ПЦР-тест на инфекции", "Генетика", 80.0, 0.0, 0.0, "BRCA1", 1.5));
+    availableAnalyses.add(new BloodAnalysis("General blood test", "Гематология", 18.0, 4.0, 9.0, true, 6.0));
+    availableAnalyses.add(new UrineAnalysis("Urinalysis according to Nechiporenko", "Клиника", 12.0, 0.0, 2000.0, true, 3.0));
+    availableAnalyses.add(new GeneticAnalysis("PCR test for infections", "Генетика", 80.0, 0.0, 0.0, "BRCA1", 1.5));
 }
 
 Menu::~Menu() {
@@ -94,6 +94,27 @@ void Menu::display_analyses() const {
     cout << "\n=== СПИСОК ДОСТУПНЫХ АНАЛИЗОВ ===\n";
     for (int i = 0; i < availableAnalyses.size(); ++i) {
         cout << i + 1 << ". " << *availableAnalyses.get(i) << "\n";
+    }
+}
+void Menu::search_analyses_by_criteria() const {
+    if (availableAnalyses.empty()) {
+        throw NotFoundException("Список анализов пуст.");
+    }
+
+    double maxPrice = read_double("Введите максимальную базовую стоимость для поиска: ", 0.0);
+
+    auto filteredAnalyses = availableAnalyses.find_by([maxPrice](Analysis* a) {
+        return a->get_base_cost() <= maxPrice;
+        });
+
+    if (filteredAnalyses.empty()) {
+        cout << "Не найдено анализов с базовой стоимостью до " << maxPrice << " руб.\n";
+        return;
+    }
+
+    cout << "\n=== РЕЗУЛЬТАТЫ ПОИСКА ПО КРИТЕРИЮ (find_by) ===\n";
+    for (size_t i = 0; i < filteredAnalyses.size(); ++i) {
+        cout << i + 1 << ". " << *filteredAnalyses[i] << "\n";
     }
 }
 
@@ -292,6 +313,33 @@ int Menu::select_patient() const {
     return read_int("Ваш выбор: ", 1, patients.size()) - 1;
 }
 
+void Menu::search_specific_analysis() const {
+    if (availableAnalyses.empty()) {
+        throw NotFoundException("Список анализов пуст.");
+    }
+
+    cout << "Введите название анализа для точного поиска: ";
+    string targetName;
+
+    getline(cin >> ws, targetName);
+
+    int foundIndex = -1;
+    for (int i = 0; i < availableAnalyses.size(); ++i) {
+        if (availableAnalyses.get(i)->get_name() == targetName) {
+            foundIndex = i;
+            break;
+        }
+    }
+
+    if (foundIndex != -1) {
+        cout << "\n[ОБЪЕКТ НАЙДЕН]: Элемент обнаружен в коллекции под индексом [" << foundIndex << "]:\n";
+        cout << *availableAnalyses.get(foundIndex) << "\n";
+    }
+    else {
+        cout << "\n[ПОИСК]: Объект с таким наименованием не найден в коллекции.\n";
+    }
+}
+
 void Menu::demo_lab5_templates() {
     cout << "\n=== ДЕМОНСТРАЦИЯ ЛАБЫ №5 (Шаблоны) ===\n";
     cout << "1. Collection<Analysis*> содержит анализов: " << availableAnalyses.size() << "\n";
@@ -325,10 +373,12 @@ void Menu::run() {
             << "----------------------------------------\n"
             << "10. [Лаба №5] Демонстрация шаблонов\n"
             << "11. [Лаба №6] Демонстрация исключений\n"
+            << "12. [Лаба №5] Поиск анализов по критерию (find_by)\n"
+            << "13. [Лаба №5] Точный поиск объекта\n"
             << "0. Выход\n";
 
         try {
-            choice = read_int("Выберите действие: ", 0, 11);
+            choice = read_int("Выберите действие: ", 0, 13);
 
             switch (choice) {
             case 1: display_analyses(); break;
@@ -342,6 +392,8 @@ void Menu::run() {
             case 9: add_patient(); break;
             case 10: demo_lab5_templates(); break;
             case 11: demo_lab6_exceptions(); break;
+            case 12: search_analyses_by_criteria(); break;
+            case 13: search_specific_analysis(); break;
             case 0: cout << "Завершение работы программы...\n"; break;
             }
         }

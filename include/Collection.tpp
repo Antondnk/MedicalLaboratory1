@@ -53,3 +53,13 @@ void Collection<T>::display() const {
         std::cout << "[" << i + 1 << "]\n" << items[i] << "\n";
     }
 }
+
+template <typename T>
+int Collection<T>::find_object(const T& item) const {
+    for (size_t i = 0; i < items.size(); ++i) {
+        if (items[i] == item) {
+            return static_cast<int>(i);
+        }
+    }
+    return -1;
+}
