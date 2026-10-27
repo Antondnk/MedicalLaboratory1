@@ -96,7 +96,7 @@ void Menu::display_analyses() const {
         cout << i + 1 << ". " << *availableAnalyses.get(i) << "\n";
     }
 }
-void Menu::search_analyses_by_criteria() const {
+void Menu::search_analyses_by_price() const {
     if (availableAnalyses.empty()) {
         throw NotFoundException("Список анализов пуст.");
     }
@@ -392,7 +392,7 @@ void Menu::run() {
             case 9: add_patient(); break;
             case 10: demo_lab5_templates(); break;
             case 11: demo_lab6_exceptions(); break;
-            case 12: search_analyses_by_criteria(); break;
+            case 12: search_analyses_by_price(); break;
             case 13: search_specific_analysis(); break;
             case 0: cout << "Завершение работы программы...\n"; break;
             }

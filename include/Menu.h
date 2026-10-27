@@ -39,7 +39,7 @@ public:
 
     void run();
 
-    void search_analyses_by_criteria() const;
+    void search_analyses_by_price() const;
 
     void search_specific_analysis() const;
 };
