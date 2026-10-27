@@ -1,4 +1,7 @@
 #pragma once
+#include <vector>
+#include <iostream>
+#include "exceptions/Exceptions.h"
 
 template <typename T>
 void Collection<T>::add(const T& item) {
