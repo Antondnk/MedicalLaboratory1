@@ -1,20 +1,25 @@
 #include "BloodAnalysis.h"
+#include "exceptions/Exceptions.h"
 #define NUM  2
 #define MORE 15
 #define LESS 5
 
+// Конструктор по умолчанию не валидирует: пустой объект-заготовка допустим.
 BloodAnalysis::BloodAnalysis()
-    : BloodAnalysis("", "", 0.0, 0.0, 0.0, false, 0.0) {
+    : Analysis(), requiresFasting(false), reagentCost(0.0) {
 }
 
 BloodAnalysis::BloodAnalysis(const string& name, const string& category, double baseCost,
     double minNormal, double maxNormal, bool fasting, double reagentCost)
     : Analysis(name, category, baseCost, minNormal, maxNormal),
     requiresFasting(fasting), reagentCost(reagentCost) {
+    if (!(reagentCost >= 0)) {
+        throw InvalidDataException("Стоимость реагентов не может быть отрицательной.");
+    }
 }
 
 string BloodAnalysis::get_type() const {
-    return "������ �����";
+    return "Анализ крови";
 }
 
 double BloodAnalysis::calculate_total_cost() const {
@@ -23,9 +28,9 @@ double BloodAnalysis::calculate_total_cost() const {
 
 void BloodAnalysis::print_info(ostream& os) const {
     Analysis::print_info(os);
-    os << " \n\t �������: " << (requiresFasting ? "��" : "���")
-        << " \n\t ��������: " << reagentCost << " ���."
-        << " \n\t ������� ���������� (CITO): " << calculate_express_cost() << " ���.";
+    os << " \n\t Натощак: " << (requiresFasting ? "Да" : "Нет")
+        << " \n\t Реагенты: " << reagentCost << " руб."
+        << " \n\t Срочное выполнение (CITO): " << calculate_express_cost() << " руб.";
 }
 
 bool BloodAnalysis::get_requires_fasting() const { return requiresFasting; }

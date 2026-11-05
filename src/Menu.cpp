@@ -1,14 +1,16 @@
 #include "Menu.h"
+#include "exceptions/Exceptions.h"
 #include <iostream>
+#include <stdexcept>
 
 using namespace std;
 
 Menu::Menu() {
-    patients.add(Patient("Иванов Иван Иванович"));
+    patients.add(Patient("РРІР°РЅРѕРІ РРІР°РЅ РРІР°РЅРѕРІРёС‡"));
 
-    availableAnalyses.add(new BloodAnalysis("General blood test", "Гематология", 18.0, 4.0, 9.0, true, 6.0));
-    availableAnalyses.add(new UrineAnalysis("Urinalysis according to Nechiporenko", "Клиника", 12.0, 0.0, 2000.0, true, 3.0));
-    availableAnalyses.add(new GeneticAnalysis("PCR test for infections", "Генетика", 80.0, 0.0, 0.0, "BRCA1", 1.5));
+    availableAnalyses.add(new BloodAnalysis("General blood test", "Р“РµРјР°С‚РѕР»РѕРіРёСЏ", 18.0, 4.0, 9.0, true, 6.0));
+    availableAnalyses.add(new UrineAnalysis("Urinalysis according to Nechiporenko", "РљР»РёРЅРёРєР°", 12.0, 0.0, 2000.0, true, 3.0));
+    availableAnalyses.add(new GeneticAnalysis("PCR test for infections", "Р“РµРЅРµС‚РёРєР°", 80.0, 0.0, 0.0, "BRCA1", 1.5));
 }
 
 Menu::~Menu() {
@@ -22,303 +24,282 @@ void Menu::clear_memory() {
     availableAnalyses.clear();
 }
 
-int Menu::read_int(const string& prompt, int minVal, int maxVal) const {
+// ---------------------------------------------------------------------------
+// Р’РІРѕРґ. Р­С‚Рё РјРµС‚РѕРґС‹ С‚РѕР»СЊРєРѕ С‡РёС‚Р°СЋС‚ Рё СЂР°Р·Р±РёСЂР°СЋС‚ РІРІРѕРґ. Р•СЃР»Рё СЌС‚Рѕ РЅРµ С‡РёСЃР»Рѕ, РѕРЅРё
+// СЃР±СЂР°СЃС‹РІР°СЋС‚ СЃРѕСЃС‚РѕСЏРЅРёРµ cin (С‡С‚РѕР±С‹ РїСЂРѕРіСЂР°РјРјР° РјРѕРіР»Р° РїСЂРѕРґРѕР»Р¶РёС‚СЊ) Рё Р±СЂРѕСЃР°СЋС‚ РёСЃРєР»СЋС‡РµРЅРёРµ.
+// Р”РѕРїСѓСЃС‚РёРјРѕСЃС‚СЊ Р·РЅР°С‡РµРЅРёСЏ (РґРёР°РїР°Р·РѕРЅ, Р·РЅР°Рє, С„РѕСЂРјР°С‚ РґР°С‚С‹) РїСЂРѕРІРµСЂСЏРµС‚ С‚РѕС‚ РєРѕРґ,
+// РєРѕС‚РѕСЂС‹Р№ СЌС‚Рѕ Р·РЅР°С‡РµРЅРёРµ РёСЃРїРѕР»СЊР·СѓРµС‚.
+// ---------------------------------------------------------------------------
+int Menu::read_int(const string& prompt) const {
+    cout << prompt;
     int value;
-    while (true) {
-        cout << prompt;
-        if (cin >> value && value >= minVal && value <= maxVal) {
-            cin.ignore(10000, '\n');
-            return value;
-        }
-        cout << "Ошибка! Введите целое число от " << minVal << " до " << maxVal << ".\n";
-        cin.clear();
+    if (cin >> value) {
         cin.ignore(10000, '\n');
+        return value;
     }
+    if (cin.eof()) {
+        throw runtime_error("Р’РІРѕРґ РґР°РЅРЅС‹С… РїСЂРµРєСЂР°С‰С‘РЅ (РєРѕРЅРµС† РїРѕС‚РѕРєР° РІРІРѕРґР°).");
+    }
+    cin.clear();
+    cin.ignore(10000, '\n');
+    throw InvalidDataException("РћР¶РёРґР°Р»РѕСЃСЊ С†РµР»РѕРµ С‡РёСЃР»Рѕ.");
 }
 
-double Menu::read_double(const string& prompt, double minVal) const {
+double Menu::read_double(const string& prompt) const {
+    cout << prompt;
     double value;
-    while (true) {
-        cout << prompt;
-        if (cin >> value && value >= minVal) {
-            cin.ignore(10000, '\n');
-            return value;
-        }
-        cout << "Ошибка! Введите числовое значение (не меньше " << minVal << ").\n";
-        cin.clear();
+    if (cin >> value) {
         cin.ignore(10000, '\n');
+        return value;
     }
+    if (cin.eof()) {
+        throw runtime_error("Р’РІРѕРґ РґР°РЅРЅС‹С… РїСЂРµРєСЂР°С‰С‘РЅ (РєРѕРЅРµС† РїРѕС‚РѕРєР° РІРІРѕРґР°).");
+    }
+    cin.clear();
+    cin.ignore(10000, '\n');
+    throw InvalidDataException("РћР¶РёРґР°Р»РѕСЃСЊ С‡РёСЃР»Рѕ.");
 }
 
-bool Menu::is_valid_date(const string& date) const {
-    if (date.length() != 10) return false;
-    if (date[2] != '.' || date[5] != '.') return false;
-
-    for (int i = 0; i < 10; ++i) {
-        if (i == 2 || i == 5) continue;
-        if (date[i] < '0' || date[i] > '9') return false;
+bool Menu::read_yes_no(const string& prompt) const {
+    int answer = read_int(prompt);
+    if (answer != 0 && answer != 1) {
+        throw InvalidDataException("РќСѓР¶РЅРѕ РІРІРµСЃС‚Рё 1 (РґР°) РёР»Рё 0 (РЅРµС‚), Р° РІРІРµРґРµРЅРѕ: " + to_string(answer) + ".");
     }
-
-    int day = stoi(date.substr(0, 2));
-    int month = stoi(date.substr(3, 2));
-    int year = stoi(date.substr(6, 4));
-
-    if (month < 1 || month > 12) return false;
-    if (year < 1900 || year > 2100) return false;
-
-    int days_in_month[] = { 0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
-    if ((year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)) {
-        days_in_month[2] = 29;
-    }
-
-    if (day < 1 || day > days_in_month[month]) return false;
-    return true;
+    return answer == 1;
 }
 
-string Menu::read_date(const string& prompt) const {
-    string date;
-    while (true) {
-        cout << prompt;
-        getline(cin, date);
-        if (is_valid_date(date)) {
-            return date;
+void Menu::check_analysis_not_used(const Analysis* analysis, const Collection<Patient>& patientList) {
+    for (int i = 0; i < patientList.size(); ++i) {
+        for (const auto& res : patientList.get(i).get_results()) {
+            if (res.get_analysis() == analysis) {
+                throw ConstraintViolationException(
+                    "РђРЅР°Р»РёР· \"" + analysis->get_name() + "\" СѓР¶Рµ СЃРґР°РЅ РїР°С†РёРµРЅС‚РѕРј \"" +
+                    patientList.get(i).get_full_name() + "\". РЈРґР°Р»РµРЅРёРµ Р·Р°РїСЂРµС‰РµРЅРѕ.");
+            }
         }
-        cout << "Ошибка ввода! Введите дату в формате ДД.ММ.ГГГГ (например, 10.09.2026).\n";
     }
 }
 
 void Menu::display_analyses() const {
     if (availableAnalyses.empty()) {
-        throw NotFoundException("Список доступных анализов пуст.");
+        throw NotFoundException("РЎРїРёСЃРѕРє РґРѕСЃС‚СѓРїРЅС‹С… Р°РЅР°Р»РёР·РѕРІ РїСѓСЃС‚.");
     }
-    cout << "\n=== СПИСОК ДОСТУПНЫХ АНАЛИЗОВ ===\n";
+    cout << "\n=== РЎРџРРЎРћРљ Р”РћРЎРўРЈРџРќР«РҐ РђРќРђР›РР—РћР’ ===\n";
     for (int i = 0; i < availableAnalyses.size(); ++i) {
         cout << i + 1 << ". " << *availableAnalyses.get(i) << "\n";
     }
 }
+
 void Menu::search_analyses_by_price() const {
     if (availableAnalyses.empty()) {
-        throw NotFoundException("Список анализов пуст.");
+        throw NotFoundException("РЎРїРёСЃРѕРє Р°РЅР°Р»РёР·РѕРІ РїСѓСЃС‚.");
     }
 
-    double maxPrice = read_double("Введите максимальную базовую стоимость для поиска: ", 0.0);
+    double maxPrice = read_double("Р’РІРµРґРёС‚Рµ РјР°РєСЃРёРјР°Р»СЊРЅСѓСЋ Р±Р°Р·РѕРІСѓСЋ СЃС‚РѕРёРјРѕСЃС‚СЊ РґР»СЏ РїРѕРёСЃРєР°: ");
+    if (!(maxPrice >= 0)) {
+        throw InvalidDataException("РњР°РєСЃРёРјР°Р»СЊРЅР°СЏ СЃС‚РѕРёРјРѕСЃС‚СЊ РЅРµ РјРѕР¶РµС‚ Р±С‹С‚СЊ РѕС‚СЂРёС†Р°С‚РµР»СЊРЅРѕР№.");
+    }
 
     auto filteredAnalyses = availableAnalyses.find_by([maxPrice](Analysis* a) {
         return a->get_base_cost() <= maxPrice;
         });
 
     if (filteredAnalyses.empty()) {
-        cout << "Не найдено анализов с базовой стоимостью до " << maxPrice << " руб.\n";
+        cout << "РќРµ РЅР°Р№РґРµРЅРѕ Р°РЅР°Р»РёР·РѕРІ СЃ Р±Р°Р·РѕРІРѕР№ СЃС‚РѕРёРјРѕСЃС‚СЊСЋ РґРѕ " << maxPrice << " СЂСѓР±.\n";
         return;
     }
 
-    cout << "\n=== РЕЗУЛЬТАТЫ ПОИСКА ПО КРИТЕРИЮ ===\n";
+    cout << "\n=== Р Р•Р—РЈР›Р¬РўРђРўР« РџРћРРЎРљРђ РџРћ Р¦Р•РќР• (find_by) ===\n";
     for (size_t i = 0; i < filteredAnalyses.size(); ++i) {
         cout << i + 1 << ". " << *filteredAnalyses[i] << "\n";
     }
 }
 
 void Menu::change_analysis_cost() {
-    if (availableAnalyses.empty()) {
-        throw NotFoundException("Список анализов пуст.");
-    }
-    display_analyses();
-    int idx = read_int("Выберите номер анализа для изменения стоимости: ", 1, availableAnalyses.size()) - 1;
-    double newCost = read_double("Введите новую базовую стоимость: ", 0.0);
+    display_analyses(); // Р±СЂРѕСЃРёС‚ NotFoundException, РµСЃР»Рё СЃРїРёСЃРѕРє РїСѓСЃС‚
+    int idx = read_int("Р’С‹Р±РµСЂРёС‚Рµ РЅРѕРјРµСЂ Р°РЅР°Р»РёР·Р° РґР»СЏ РёР·РјРµРЅРµРЅРёСЏ СЃС‚РѕРёРјРѕСЃС‚Рё: ") - 1;
+    Analysis* analysis = availableAnalyses.get(idx); // IndexOutOfBoundsException РїСЂРё РЅРµРІРµСЂРЅРѕРј РЅРѕРјРµСЂРµ
+    double newCost = read_double("Р’РІРµРґРёС‚Рµ РЅРѕРІСѓСЋ Р±Р°Р·РѕРІСѓСЋ СЃС‚РѕРёРјРѕСЃС‚СЊ: ");
 
-    availableAnalyses.get(idx)->set_base_cost(newCost);
-    cout << "Базовая стоимость анализа успешно изменена!\n";
+    analysis->set_base_cost(newCost); // InvalidDataException РїСЂРё РѕС‚СЂРёС†Р°С‚РµР»СЊРЅРѕР№ СЃС‚РѕРёРјРѕСЃС‚Рё
+    cout << "Р‘Р°Р·РѕРІР°СЏ СЃС‚РѕРёРјРѕСЃС‚СЊ Р°РЅР°Р»РёР·Р° СѓСЃРїРµС€РЅРѕ РёР·РјРµРЅРµРЅР°!\n";
 }
 
 void Menu::add_patient() {
     string name;
-    while (true) {
-        cout << "Введите ФИО нового пациента: ";
-        getline(cin, name);
+    cout << "Р’РІРµРґРёС‚Рµ Р¤РРћ РЅРѕРІРѕРіРѕ РїР°С†РёРµРЅС‚Р°: ";
+    getline(cin, name);
 
-        if (!name.empty() && name.find_first_not_of(" \t") != string::npos) {
-            break;
-        }
-        cout << "Ошибка: ФИО пациента не может быть пустым!\n";
-    }
-
-    patients.add(Patient(name));
-    cout << "Пациент \"" << name << "\" успешно добавлен в базу!\n";
+    patients.add(Patient(name)); // InvalidDataException, РµСЃР»Рё Р¤РРћ РїСѓСЃС‚РѕРµ
+    cout << "РџР°С†РёРµРЅС‚ \"" << name << "\" СѓСЃРїРµС€РЅРѕ РґРѕР±Р°РІР»РµРЅ РІ Р±Р°Р·Сѓ!\n";
 }
 
 void Menu::take_test() {
     if (availableAnalyses.empty()) {
-        throw NotFoundException("Список анализов пуст!");
+        throw NotFoundException("РЎРїРёСЃРѕРє Р°РЅР°Р»РёР·РѕРІ РїСѓСЃС‚!");
     }
     if (patients.empty()) {
-        throw NotFoundException("Сначала добавьте хотя бы одного пациента!");
+        throw NotFoundException("РЎРЅР°С‡Р°Р»Р° РґРѕР±Р°РІСЊС‚Рµ С…РѕС‚СЏ Р±С‹ РѕРґРЅРѕРіРѕ РїР°С†РёРµРЅС‚Р°!");
     }
 
     int p_idx = select_patient();
     display_analyses();
-    int a_idx = read_int("Введите номер анализа: ", 1, availableAnalyses.size()) - 1;
-    string date = read_date("Введите дату сдачи (например, 10.09.2026): ");
-    double val = read_double("Введите полученный результат (число): ", 0.0);
+    int a_idx = read_int("Р’РІРµРґРёС‚Рµ РЅРѕРјРµСЂ Р°РЅР°Р»РёР·Р°: ") - 1;
+    Analysis* analysis = availableAnalyses.get(a_idx); // IndexOutOfBoundsException
 
-    TestResult result(availableAnalyses.get(a_idx), date, val);
+    string date;
+    cout << "Р’РІРµРґРёС‚Рµ РґР°С‚Сѓ СЃРґР°С‡Рё (РЅР°РїСЂРёРјРµСЂ, 10.09.2026): ";
+    getline(cin, date);
+    double val = read_double("Р’РІРµРґРёС‚Рµ РїРѕР»СѓС‡РµРЅРЅС‹Р№ СЂРµР·СѓР»СЊС‚Р°С‚ (С‡РёСЃР»Рѕ): ");
 
-    if (patients.get(p_idx).has_result(result)) {
-        throw DuplicateIdException("Ошибка: У пациента уже есть этот результат на эту дату!");
-    }
+    TestResult result(analysis, date, val); // InvalidDataException: РЅРµРІРµСЂРЅР°СЏ РґР°С‚Р° / РѕС‚СЂРёС†Р°С‚РµР»СЊРЅРѕРµ Р·РЅР°С‡РµРЅРёРµ
 
-    patients.get(p_idx) += result;
-    cout << "Результат анализа успешно добавлен пациенту!\n";
+    patients.get(p_idx) += result; // DuplicateIdException, РµСЃР»Рё С‚Р°РєРѕР№ СЂРµР·СѓР»СЊС‚Р°С‚ СѓР¶Рµ РµСЃС‚СЊ
+    cout << "Р РµР·СѓР»СЊС‚Р°С‚ Р°РЅР°Р»РёР·Р° СѓСЃРїРµС€РЅРѕ РґРѕР±Р°РІР»РµРЅ РїР°С†РёРµРЅС‚Сѓ!\n";
 
     if (is_critical(result)) {
-        cout << "ВНИМАНИЕ: Результат является КРИТИЧЕСКИМ (отклонение от нормы > 20%)!\n";
+        cout << "Р’РќРРњРђРќРР•: Р РµР·СѓР»СЊС‚Р°С‚ СЏРІР»СЏРµС‚СЃСЏ РљР РРўРР§Р•РЎРљРРњ (РѕС‚РєР»РѕРЅРµРЅРёРµ РѕС‚ РЅРѕСЂРјС‹ > 20%)!\n";
     }
 }
 
 void Menu::display_patient_card() const {
     if (patients.empty()) {
-        throw NotFoundException("Список пациентов пуст.");
+        throw NotFoundException("РЎРїРёСЃРѕРє РїР°С†РёРµРЅС‚РѕРІ РїСѓСЃС‚.");
     }
-    cout << "\n=== МЕДИЦИНСКИЕ КАРТЫ ПАЦИЕНТОВ ===\n";
+    cout << "\n=== РњР•Р”РР¦РРќРЎРљРР• РљРђР РўР« РџРђР¦РР•РќРўРћР’ ===\n";
     for (int i = 0; i < patients.size(); ++i) {
         cout << patients.get(i) << "\n";
     }
 }
 
 void Menu::add_analysis() {
-    cout << "\nВыберите тип создаваемого анализа:\n"
-        << "1. Анализ крови\n"
-        << "2. Анализ мочи\n"
-        << "3. Генетический / ПЦР анализ\n";
-    int typeChoice = read_int("Ваш выбор: ", 1, 3);
+    cout << "\nР’С‹Р±РµСЂРёС‚Рµ С‚РёРї СЃРѕР·РґР°РІР°РµРјРѕРіРѕ Р°РЅР°Р»РёР·Р°:\n"
+        << "1. РђРЅР°Р»РёР· РєСЂРѕРІРё\n"
+        << "2. РђРЅР°Р»РёР· РјРѕС‡Рё\n"
+        << "3. Р“РµРЅРµС‚РёС‡РµСЃРєРёР№ / РџР¦Р  Р°РЅР°Р»РёР·\n";
+    int typeChoice = read_int("Р’Р°С€ РІС‹Р±РѕСЂ: ");
+    if (typeChoice < 1 || typeChoice > 3) {
+        throw InvalidDataException("РќРµРёР·РІРµСЃС‚РЅС‹Р№ С‚РёРї Р°РЅР°Р»РёР·Р°: " + to_string(typeChoice) + " (РґРѕРїСѓСЃС‚РёРјРѕ 1-3).");
+    }
 
     string name, category;
-    cout << "Введите название анализа: ";
+    cout << "Р’РІРµРґРёС‚Рµ РЅР°Р·РІР°РЅРёРµ Р°РЅР°Р»РёР·Р°: ";
     getline(cin, name);
-    cout << "Введите категорию: ";
+    cout << "Р’РІРµРґРёС‚Рµ РєР°С‚РµРіРѕСЂРёСЋ: ";
     getline(cin, category);
 
-    double baseCost = read_double("Введите баз. стоимость: ", 0.0);
-    double minN = read_double("Мин. норма: ", 0.0);
-    double maxN = read_double("Макс. норма: ", minN);
+    double baseCost = read_double("Р’РІРµРґРёС‚Рµ Р±Р°Р·. СЃС‚РѕРёРјРѕСЃС‚СЊ: ");
+    double minN = read_double("РњРёРЅ. РЅРѕСЂРјР°: ");
+    double maxN = read_double("РњР°РєСЃ. РЅРѕСЂРјР°: ");
 
     Analysis* newAnalysis = nullptr;
 
+    // РљРѕРЅСЃС‚СЂСѓРєС‚РѕСЂС‹ СЃР°РјРё РїСЂРѕРІРµСЂСЏСЋС‚ РґР°РЅРЅС‹Рµ Рё Р±СЂРѕСЃР°СЋС‚ InvalidDataException.
+    // Р•СЃР»Рё РєРѕРЅСЃС‚СЂСѓРєС‚РѕСЂ Р±СЂРѕСЃРёР» РёСЃРєР»СЋС‡РµРЅРёРµ, РѕРїРµСЂР°С‚РѕСЂ new РѕСЃРІРѕР±РѕР¶РґР°РµС‚ РїР°РјСЏС‚СЊ СЃР°Рј, СѓС‚РµС‡РєРё РЅРµС‚.
     if (typeChoice == 1) {
-        int fastingInt = read_int("Требуется сдача натощак (1 - Да, 0 - Нет): ", 0, 1);
-        double reagentCost = read_double("Стоимость реагентов: ", 0.0);
-        newAnalysis = new BloodAnalysis(name, category, baseCost, minN, maxN, fastingInt == 1, reagentCost);
+        bool fasting = read_yes_no("РўСЂРµР±СѓРµС‚СЃСЏ СЃРґР°С‡Р° РЅР°С‚РѕС‰Р°Рє (1 - Р”Р°, 0 - РќРµС‚): ");
+        double reagentCost = read_double("РЎС‚РѕРёРјРѕСЃС‚СЊ СЂРµР°РіРµРЅС‚РѕРІ: ");
+        newAnalysis = new BloodAnalysis(name, category, baseCost, minN, maxN, fasting, reagentCost);
     }
     else if (typeChoice == 2) {
-        int sterileInt = read_int("Нужен контейнер (1 - Да, 0 - Нет): ", 0, 1);
-        double containerCost = (sterileInt == 1) ? read_double("Стоимость контейнера: ", 0.0) : 0.0;
-        newAnalysis = new UrineAnalysis(name, category, baseCost, minN, maxN, sterileInt == 1, containerCost);
+        bool sterile = read_yes_no("РќСѓР¶РµРЅ РєРѕРЅС‚РµР№РЅРµСЂ (1 - Р”Р°, 0 - РќРµС‚): ");
+        double containerCost = sterile ? read_double("РЎС‚РѕРёРјРѕСЃС‚СЊ РєРѕРЅС‚РµР№РЅРµСЂР°: ") : 0.0;
+        newAnalysis = new UrineAnalysis(name, category, baseCost, minN, maxN, sterile, containerCost);
     }
-    else if (typeChoice == 3) {
+    else {
         string gene;
-        cout << "Введите ген-маркер: ";
+        cout << "Р’РІРµРґРёС‚Рµ РіРµРЅ-РјР°СЂРєРµСЂ: ";
         getline(cin, gene);
-        double multiplier = read_double("Коэффициент сложности: ", 0.1);
+        double multiplier = read_double("РљРѕСЌС„С„РёС†РёРµРЅС‚ СЃР»РѕР¶РЅРѕСЃС‚Рё: ");
         newAnalysis = new GeneticAnalysis(name, category, baseCost, minN, maxN, gene, multiplier);
     }
 
-    if (newAnalysis) {
-        availableAnalyses.add(newAnalysis);
-        cout << "Новый вид анализа успешно добавлен в шаблонный контейнер!\n";
-    }
+    availableAnalyses.add(newAnalysis);
+    cout << "РќРѕРІС‹Р№ РІРёРґ Р°РЅР°Р»РёР·Р° СѓСЃРїРµС€РЅРѕ РґРѕР±Р°РІР»РµРЅ РІ С€Р°Р±Р»РѕРЅРЅС‹Р№ РєРѕРЅС‚РµР№РЅРµСЂ!\n";
 }
 
 void Menu::remove_analysis() {
-    if (availableAnalyses.empty()) {
-        throw NotFoundException("Список анализов пуст.");
-    }
     display_analyses();
-    int idx = read_int("Выберите номер анализа для удаления: ", 1, availableAnalyses.size()) - 1;
+    int idx = read_int("Р’С‹Р±РµСЂРёС‚Рµ РЅРѕРјРµСЂ Р°РЅР°Р»РёР·Р° РґР»СЏ СѓРґР°Р»РµРЅРёСЏ: ") - 1;
+    Analysis* targetAnalysis = availableAnalyses.get(idx); // IndexOutOfBoundsException
 
-    Analysis* targetAnalysis = availableAnalyses.get(idx);
+    check_analysis_not_used(targetAnalysis, patients); // ConstraintViolationException: СЃРІСЏР·СЊ СЃ СЂРµР·СѓР»СЊС‚Р°С‚Р°РјРё РїР°С†РёРµРЅС‚РѕРІ
 
-    for (int i = 0; i < patients.size(); ++i) {
-        const auto& results = patients.get(i).get_results();
-        for (const auto& res : results) {
-            if (res.get_analysis() == targetAnalysis) {
-                throw ConstraintViolationException("Ошибка: Этот анализ уже сдан пациентом! Удаление запрещено.");
-            }
-        }
-    }
-
-    delete availableAnalyses.get(idx);
+    delete targetAnalysis;
     availableAnalyses.remove(idx);
-    cout << "Вид анализа удален из базы.\n";
+    cout << "Р’РёРґ Р°РЅР°Р»РёР·Р° СѓРґР°Р»РµРЅ РёР· Р±Р°Р·С‹.\n";
 }
 
 void Menu::remove_test_result() {
-    if (patients.empty()) {
-        throw NotFoundException("Список пациентов пуст!");
-    }
-
     int p_idx = select_patient();
     const auto& results = patients.get(p_idx).get_results();
     if (results.empty()) {
-        throw NotFoundException("У пациента нет результатов анализов.");
+        throw NotFoundException("РЈ РїР°С†РёРµРЅС‚Р° РЅРµС‚ СЂРµР·СѓР»СЊС‚Р°С‚РѕРІ Р°РЅР°Р»РёР·РѕРІ.");
     }
 
-    cout << "\nРезультаты анализов:\n";
+    cout << "\nР РµР·СѓР»СЊС‚Р°С‚С‹ Р°РЅР°Р»РёР·РѕРІ:\n";
     for (size_t i = 0; i < results.size(); ++i) {
         cout << i + 1 << ". " << results[i] << "\n";
     }
 
-    int idx = read_int("Выберите номер результата: ", 1, results.size()) - 1;
+    int idx = read_int("Р’С‹Р±РµСЂРёС‚Рµ РЅРѕРјРµСЂ СЂРµР·СѓР»СЊС‚Р°С‚Р°: ") - 1;
+    if (idx < 0 || idx >= static_cast<int>(results.size())) {
+        throw IndexOutOfBoundsException("Р РµР·СѓР»СЊС‚Р°С‚Р° СЃ РЅРѕРјРµСЂРѕРј " + to_string(idx + 1) +
+            " РЅРµС‚ (Сѓ РїР°С†РёРµРЅС‚Р° СЂРµР·СѓР»СЊС‚Р°С‚РѕРІ: " + to_string(results.size()) + ").");
+    }
     patients.get(p_idx) -= results[idx];
-    cout << "Результат анализа удален у пациента.\n";
+    cout << "Р РµР·СѓР»СЊС‚Р°С‚ Р°РЅР°Р»РёР·Р° СѓРґР°Р»РµРЅ Сѓ РїР°С†РёРµРЅС‚Р°.\n";
 }
 
 void Menu::compare_analyses() const {
     if (availableAnalyses.size() < 2) {
-        throw ConstraintViolationException("Для сравнения нужно минимум 2 анализа в базе!");
+        throw ConstraintViolationException("Р”Р»СЏ СЃСЂР°РІРЅРµРЅРёСЏ РЅСѓР¶РЅРѕ РјРёРЅРёРјСѓРј 2 Р°РЅР°Р»РёР·Р° РІ Р±Р°Р·Рµ.");
     }
     display_analyses();
-    int idx1 = read_int("Первый анализ: ", 1, availableAnalyses.size()) - 1;
-    int idx2 = read_int("Второй анализ: ", 1, availableAnalyses.size()) - 1;
+    int idx1 = read_int("РџРµСЂРІС‹Р№ Р°РЅР°Р»РёР·: ") - 1;
+    const Analysis& a1 = *availableAnalyses.get(idx1); // IndexOutOfBoundsException
+    int idx2 = read_int("Р’С‚РѕСЂРѕР№ Р°РЅР°Р»РёР·: ") - 1;
+    const Analysis& a2 = *availableAnalyses.get(idx2); // IndexOutOfBoundsException
 
     if (idx1 == idx2) {
-        throw InvalidDataException("Ошибка: Вы выбрали один и тот же анализ!");
+        throw InvalidDataException("Р’С‹ РІС‹Р±СЂР°Р»Рё РѕРґРёРЅ Рё С‚РѕС‚ Р¶Рµ Р°РЅР°Р»РёР·.");
     }
 
-    const Analysis& a1 = *availableAnalyses.get(idx1);
-    const Analysis& a2 = *availableAnalyses.get(idx2);
-
-    cout << "\nРезультат сравнения стоимостей:\n";
+    cout << "\nР РµР·СѓР»СЊС‚Р°С‚ СЃСЂР°РІРЅРµРЅРёСЏ СЃС‚РѕРёРјРѕСЃС‚РµР№:\n";
     if (a1 > a2) {
-        cout << "\"" << a1.get_name() << "\" дороже, чем \"" << a2.get_name() << "\".\n";
+        cout << "\"" << a1.get_name() << "\" РґРѕСЂРѕР¶Рµ, С‡РµРј \"" << a2.get_name() << "\".\n";
     }
     else if (a1 < a2) {
-        cout << "\"" << a1.get_name() << "\" дешевле, чем \"" << a2.get_name() << "\".\n";
+        cout << "\"" << a1.get_name() << "\" РґРµС€РµРІР»Рµ, С‡РµРј \"" << a2.get_name() << "\".\n";
     }
     else {
-        cout << "Стоимости равны.\n";
+        cout << "РЎС‚РѕРёРјРѕСЃС‚Рё СЂР°РІРЅС‹.\n";
     }
 }
 
 int Menu::select_patient() const {
     if (patients.empty()) {
-        throw NotFoundException("Список пациентов пуст.");
+        throw NotFoundException("РЎРїРёСЃРѕРє РїР°С†РёРµРЅС‚РѕРІ РїСѓСЃС‚.");
     }
     if (patients.size() == 1) {
-        cout << "\nВыбран пациент: " << patients.get(0).get_full_name() << "\n";
+        cout << "\nР’С‹Р±СЂР°РЅ РїР°С†РёРµРЅС‚: " << patients.get(0).get_full_name() << "\n";
         return 0;
     }
-    cout << "\nВыберите пациента:\n";
+    cout << "\nР’С‹Р±РµСЂРёС‚Рµ РїР°С†РёРµРЅС‚Р°:\n";
     for (int i = 0; i < patients.size(); ++i) {
         cout << i + 1 << ". " << patients.get(i).get_full_name() << "\n";
     }
-    return read_int("Ваш выбор: ", 1, patients.size()) - 1;
+    int idx = read_int("Р’Р°С€ РІС‹Р±РѕСЂ: ") - 1;
+    patients.get(idx); // IndexOutOfBoundsException, РµСЃР»Рё РЅРѕРјРµСЂР° РЅРµС‚
+    return idx;
 }
 
 void Menu::search_specific_analysis() const {
     if (availableAnalyses.empty()) {
-        throw NotFoundException("Список анализов пуст.");
+        throw NotFoundException("РЎРїРёСЃРѕРє Р°РЅР°Р»РёР·РѕРІ РїСѓСЃС‚.");
     }
 
-    cout << "Введите название анализа для точного поиска: ";
+    cout << "Р’РІРµРґРёС‚Рµ РЅР°Р·РІР°РЅРёРµ Р°РЅР°Р»РёР·Р° РґР»СЏ С‚РѕС‡РЅРѕРіРѕ РїРѕРёСЃРєР°: ";
     string targetName;
 
     getline(cin >> ws, targetName);
@@ -332,76 +313,127 @@ void Menu::search_specific_analysis() const {
     }
 
     if (foundIndex != -1) {
-        cout << "\n[ОБЪЕКТ НАЙДЕН]: Элемент обнаружен в коллекции под индексом [" << foundIndex << "]:\n";
+        cout << "\n[РћР‘РЄР•РљРў РќРђР™Р”Р•Рќ]: Р­Р»РµРјРµРЅС‚ РѕР±РЅР°СЂСѓР¶РµРЅ РІ РєРѕР»Р»РµРєС†РёРё РїРѕРґ РёРЅРґРµРєСЃРѕРј [" << foundIndex << "]:\n";
         cout << *availableAnalyses.get(foundIndex) << "\n";
     }
     else {
-        cout << "\n[ПОИСК]: Объект с таким наименованием не найден в коллекции.\n";
+        cout << "\n[РџРћРРЎРљ]: РћР±СЉРµРєС‚ СЃ С‚Р°РєРёРј РЅР°РёРјРµРЅРѕРІР°РЅРёРµРј РЅРµ РЅР°Р№РґРµРЅ РІ РєРѕР»Р»РµРєС†РёРё.\n";
     }
 }
 
 void Menu::demo_lab5_templates() {
-    cout << "\n=== ДЕМОНСТРАЦИЯ ЛАБЫ №5 (Шаблоны) ===\n";
-    cout << "1. Collection<Analysis*> содержит анализов: " << availableAnalyses.size() << "\n";
-    cout << "2. Collection<Patient> содержит пациентов: " << patients.size() << "\n";
+    cout << "\n=== Р”Р•РњРћРќРЎРўР РђР¦РРЇ Р›РђР‘Р« в„–5 (РЁР°Р±Р»РѕРЅС‹) ===\n";
+    cout << "1. Collection<Analysis*> СЃРѕРґРµСЂР¶РёС‚ Р°РЅР°Р»РёР·РѕРІ: " << availableAnalyses.size() << "\n";
+    cout << "2. Collection<Patient> СЃРѕРґРµСЂР¶РёС‚ РїР°С†РёРµРЅС‚РѕРІ: " << patients.size() << "\n";
 }
 
+// Р”РµРјРѕРЅСЃС‚СЂР°С†РёСЏ: РєР°Р¶РґС‹Р№ РІРёРґ РёСЃРєР»СЋС‡РµРЅРёСЏ РІС‹Р·С‹РІР°РµС‚СЃСЏ РЅР°СЃС‚РѕСЏС‰РёРј РєРѕРґРѕРј (РЅРµ РІСЂСѓС‡РЅСѓСЋ С‡РµСЂРµР· throw)
+// Рё Р»РѕРІРёС‚СЃСЏ СЃРІРѕРёРј catch. РџСЂРѕРіСЂР°РјРјР° РїРѕСЃР»Рµ РєР°Р¶РґРѕР№ РѕС€РёР±РєРё РїСЂРѕРґРѕР»Р¶Р°РµС‚ СЂР°Р±РѕС‚Р°С‚СЊ.
 void Menu::demo_lab6_exceptions() {
-    cout << "\n=== ДЕМОНСТРАЦИЯ ЛАБЫ №6 (Исключения) ===\n";
+    cout << "\n=== Р”Р•РњРћРќРЎРўР РђР¦РРЇ Р›РђР‘Р« в„–6 (РСЃРєР»СЋС‡РµРЅРёСЏ) ===\n";
+
+    // Р›РѕРєР°Р»СЊРЅС‹Рµ РѕР±СЉРµРєС‚С‹, С‡С‚РѕР±С‹ РЅРµ РїРѕСЂС‚РёС‚СЊ РґР°РЅРЅС‹Рµ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ.
+    BloodAnalysis demoAnalysis("Р”РµРјРѕ-Р°РЅР°Р»РёР·", "Р”РµРјРѕ", 10.0, 1.0, 5.0, false, 2.0);
+    Patient demoPatient("Р”РµРјРѕ РџР°С†РёРµРЅС‚");
+
     try {
-        cout << "Проверка перехвата выхода за границы контейнера...\n";
+        cout << "1) Р’С‹С…РѕРґ Р·Р° РіСЂР°РЅРёС†С‹ РєРѕРЅС‚РµР№РЅРµСЂР°: get(999)...\n";
         availableAnalyses.get(999);
     }
-    catch (const LabException& e) {
-        cout << "[ПЕРЕХВАЧЕНО ИСКЛЮЧЕНИЕ]: " << e.what() << "\n";
+    catch (const IndexOutOfBoundsException& e) {
+        cout << "   [IndexOutOfBoundsException / " << e.get_exception_category() << "]: " << e.what() << "\n";
     }
+
+    try {
+        cout << "2) РќРµРєРѕСЂСЂРµРєС‚РЅС‹Рµ РґР°РЅРЅС‹Рµ: Р°РЅР°Р»РёР· СЃ РѕС‚СЂРёС†Р°С‚РµР»СЊРЅРѕР№ СЃС‚РѕРёРјРѕСЃС‚СЊСЋ...\n";
+        BloodAnalysis bad("РџР»РѕС…РѕР№ Р°РЅР°Р»РёР·", "Р”РµРјРѕ", -10.0, 1.0, 5.0, false, 2.0);
+    }
+    catch (const InvalidDataException& e) {
+        cout << "   [InvalidDataException / " << e.get_exception_category() << "]: " << e.what() << "\n";
+    }
+
+    try {
+        cout << "3) РќРµРєРѕСЂСЂРµРєС‚РЅС‹Рµ РґР°РЅРЅС‹Рµ: СЂРµР·СѓР»СЊС‚Р°С‚ СЃ РЅРµСЃСѓС‰РµСЃС‚РІСѓСЋС‰РµР№ РґР°С‚РѕР№ 31.02.2026...\n";
+        TestResult badDate(&demoAnalysis, "31.02.2026", 3.0);
+    }
+    catch (const InvalidDataException& e) {
+        cout << "   [InvalidDataException / " << e.get_exception_category() << "]: " << e.what() << "\n";
+    }
+
+    TestResult goodResult(&demoAnalysis, "01.01.2026", 3.0);
+    demoPatient += goodResult;
+
+    try {
+        cout << "4) Р”СѓР±Р»РёРєР°С‚: РґРѕР±Р°РІР»СЏРµРј РїР°С†РёРµРЅС‚Сѓ С‚РѕС‚ Р¶Рµ СЂРµР·СѓР»СЊС‚Р°С‚ РІС‚РѕСЂРѕР№ СЂР°Р·...\n";
+        demoPatient += goodResult;
+    }
+    catch (const DuplicateIdException& e) {
+        cout << "   [DuplicateIdException / " << e.get_exception_category() << "]: " << e.what() << "\n";
+    }
+
+    try {
+        cout << "5) РћР±СЂР°С‰РµРЅРёРµ Рє РЅРµСЃСѓС‰РµСЃС‚РІСѓСЋС‰РµРјСѓ РѕР±СЉРµРєС‚Сѓ: СѓРґР°Р»СЏРµРј СЂРµР·СѓР»СЊС‚Р°С‚, РєРѕС‚РѕСЂРѕРіРѕ РЅРµС‚...\n";
+        demoPatient -= TestResult(&demoAnalysis, "02.02.2026", 1.0);
+    }
+    catch (const NotFoundException& e) {
+        cout << "   [NotFoundException / " << e.get_exception_category() << "]: " << e.what() << "\n";
+    }
+
+    try {
+        cout << "6) РќР°СЂСѓС€РµРЅРёРµ СЃРІСЏР·Рё: СѓРґР°Р»СЏРµРј Р°РЅР°Р»РёР·, РєРѕС‚РѕСЂС‹Р№ СѓР¶Рµ СЃРґР°РЅ РїР°С†РёРµРЅС‚РѕРј...\n";
+        Collection<Patient> demoPatients;
+        demoPatients.add(demoPatient);
+        check_analysis_not_used(&demoAnalysis, demoPatients);
+    }
+    catch (const ConstraintViolationException& e) {
+        cout << "   [ConstraintViolationException / " << e.get_exception_category() << "]: " << e.what() << "\n";
+    }
+
+    cout << "\nР’СЃРµ РёСЃРєР»СЋС‡РµРЅРёСЏ РїРµСЂРµС…РІР°С‡РµРЅС‹, РїСЂРѕРіСЂР°РјРјР° РїСЂРѕРґРѕР»Р¶Р°РµС‚ СЂР°Р±РѕС‚Сѓ.\n";
 }
 
-void Menu::run() {
-    int choice = -1;
-    while (choice != 0) {
-        cout << "\n--- ГЛАВНОЕ МЕНЮ ---\n"
-            << "1. Показать список доступных анализов\n"
-            << "2. Изменить стоимость анализа\n"
-            << "3. Сдать анализ пациенту\n"
-            << "4. Показать медицинские карты пациентов\n"
-            << "5. Добавить новый вид анализа\n"
-            << "6. Удалить вид анализа из базы\n"
-            << "7. Удалить результат анализа у пациента\n"
-            << "8. Сравнить стоимость двух анализов\n"
-            << "9. Добавить нового пациента\n"
-            << "----------------------------------------\n"
-            << "10. [Лаба №5] Демонстрация шаблонов\n"
-            << "11. [Лаба №6] Демонстрация исключений\n"
-            << "12. [Лаба №5] Поиск анализов по критерию (максимальная стоимость)\n"
-            << "13. [Лаба №5] Точный поиск объекта\n"
-            << "0. Выход\n";
+void Menu::print_menu() const {
+    cout << "\n--- Р“Р›РђР’РќРћР• РњР•РќР® ---\n"
+        << "1. РџРѕРєР°Р·Р°С‚СЊ СЃРїРёСЃРѕРє РґРѕСЃС‚СѓРїРЅС‹С… Р°РЅР°Р»РёР·РѕРІ\n"
+        << "2. РР·РјРµРЅРёС‚СЊ СЃС‚РѕРёРјРѕСЃС‚СЊ Р°РЅР°Р»РёР·Р°\n"
+        << "3. РЎРґР°С‚СЊ Р°РЅР°Р»РёР· РїР°С†РёРµРЅС‚Сѓ\n"
+        << "4. РџРѕРєР°Р·Р°С‚СЊ РјРµРґРёС†РёРЅСЃРєРёРµ РєР°СЂС‚С‹ РїР°С†РёРµРЅС‚РѕРІ\n"
+        << "5. Р”РѕР±Р°РІРёС‚СЊ РЅРѕРІС‹Р№ РІРёРґ Р°РЅР°Р»РёР·Р°\n"
+        << "6. РЈРґР°Р»РёС‚СЊ РІРёРґ Р°РЅР°Р»РёР·Р° РёР· Р±Р°Р·С‹\n"
+        << "7. РЈРґР°Р»РёС‚СЊ СЂРµР·СѓР»СЊС‚Р°С‚ Р°РЅР°Р»РёР·Р° Сѓ РїР°С†РёРµРЅС‚Р°\n"
+        << "8. РЎСЂР°РІРЅРёС‚СЊ СЃС‚РѕРёРјРѕСЃС‚СЊ РґРІСѓС… Р°РЅР°Р»РёР·РѕРІ\n"
+        << "9. Р”РѕР±Р°РІРёС‚СЊ РЅРѕРІРѕРіРѕ РїР°С†РёРµРЅС‚Р°\n"
+        << "----------------------------------------\n"
+        << "10. [Р›Р°Р±Р° в„–5] Р”РµРјРѕРЅСЃС‚СЂР°С†РёСЏ С€Р°Р±Р»РѕРЅРѕРІ\n"
+        << "11. [Р›Р°Р±Р° в„–6] Р”РµРјРѕРЅСЃС‚СЂР°С†РёСЏ РёСЃРєР»СЋС‡РµРЅРёР№\n"
+        << "12. [Р›Р°Р±Р° в„–5] РџРѕРёСЃРє Р°РЅР°Р»РёР·РѕРІ РїРѕ С†РµРЅРµ (find_by)\n"
+        << "13. [Р›Р°Р±Р° в„–5] РўРѕС‡РЅС‹Р№ РїРѕРёСЃРє РѕР±СЉРµРєС‚Р°\n"
+        << "0. Р’С‹С…РѕРґ\n";
+}
 
-        try {
-            choice = read_int("Выберите действие: ", 0, 13);
+bool Menu::process_command() {
+    print_menu();
+    int choice = read_int("Р’С‹Р±РµСЂРёС‚Рµ РґРµР№СЃС‚РІРёРµ: ");
 
-            switch (choice) {
-            case 1: display_analyses(); break;
-            case 2: change_analysis_cost(); break;
-            case 3: take_test(); break;
-            case 4: display_patient_card(); break;
-            case 5: add_analysis(); break;
-            case 6: remove_analysis(); break;
-            case 7: remove_test_result(); break;
-            case 8: compare_analyses(); break;
-            case 9: add_patient(); break;
-            case 10: demo_lab5_templates(); break;
-            case 11: demo_lab6_exceptions(); break;
-            case 12: search_analyses_by_price(); break;
-            case 13: search_specific_analysis(); break;
-            case 0: cout << "Завершение работы программы...\n"; break;
-            }
-        }
-        catch (const LabException& e) {
-            cerr << "\n[ОШИБКА В СИСТЕМЕ]: " << e.what() << "\n";
-        }
-        catch (const exception& e) {
-            cerr << "\n[СТАНДАРТНАЯ ОШИБКА]: " << e.what() << "\n";
-        }
+    switch (choice) {
+    case 1: display_analyses(); break;
+    case 2: change_analysis_cost(); break;
+    case 3: take_test(); break;
+    case 4: display_patient_card(); break;
+    case 5: add_analysis(); break;
+    case 6: remove_analysis(); break;
+    case 7: remove_test_result(); break;
+    case 8: compare_analyses(); break;
+    case 9: add_patient(); break;
+    case 10: demo_lab5_templates(); break;
+    case 11: demo_lab6_exceptions(); break;
+    case 12: search_analyses_by_price(); break;
+    case 13: search_specific_analysis(); break;
+    case 0:
+        cout << "Р—Р°РІРµСЂС€РµРЅРёРµ СЂР°Р±РѕС‚С‹ РїСЂРѕРіСЂР°РјРјС‹...\n";
+        return false;
+    default:
+        throw InvalidDataException("РџСѓРЅРєС‚Р° РјРµРЅСЋ в„–" + to_string(choice) + " РЅРµ СЃСѓС‰РµСЃС‚РІСѓРµС‚ (РґРѕРїСѓСЃС‚РёРјРѕ 0-13).");
     }
+    return true;
 }

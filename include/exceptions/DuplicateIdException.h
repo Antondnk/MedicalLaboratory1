@@ -1,9 +1,10 @@
 #pragma once
 #include "LabException.h"
 
+// РџРѕРїС‹С‚РєР° СЃРѕР·РґР°С‚СЊ РѕР±СЉРµРєС‚, РєРѕС‚РѕСЂС‹Р№ СѓР¶Рµ СЃСѓС‰РµСЃС‚РІСѓРµС‚ (РґСѓР±Р»РёРєР°С‚).
 class DuplicateIdException : public LabException {
 public:
-    explicit DuplicateIdException(const std::string& msg = "Ошибка: Элемент с таким идентификатором уже существует!")
+    explicit DuplicateIdException(const std::string& msg = "Р­Р»РµРјРµРЅС‚ СЃ С‚Р°РєРёРј РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂРѕРј СѓР¶Рµ СЃСѓС‰РµСЃС‚РІСѓРµС‚.")
         : LabException(msg) {
     }
 

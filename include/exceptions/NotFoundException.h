@@ -1,9 +1,10 @@
 #pragma once
 #include "LabException.h"
 
+// Обращение к несуществующему объекту: пустой список, результата нет у пациента.
 class NotFoundException : public LabException {
 public:
-    explicit NotFoundException(const std::string& msg = "������: ������� �� ������ � �������!")
+    explicit NotFoundException(const std::string& msg = "Элемент не найден в системе.")
         : LabException(msg) {
     }
 

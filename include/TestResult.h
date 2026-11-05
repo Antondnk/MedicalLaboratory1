@@ -15,6 +15,9 @@ private:
     void calculate_status();
 
 public:
+    // Формат ДД.ММ.ГГГГ с учётом числа дней в месяце и високосных годов.
+    static bool is_valid_date(const string& date);
+
     TestResult();
     TestResult(const Analysis* analysis, const string& date, double value);
 

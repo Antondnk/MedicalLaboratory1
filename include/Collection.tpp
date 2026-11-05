@@ -1,7 +1,5 @@
 #pragma once
-#include <vector>
-#include <iostream>
-#include "exceptions/Exceptions.h"
+#include "Collection.h"
 
 template <typename T>
 void Collection<T>::add(const T& item) {
@@ -11,7 +9,8 @@ void Collection<T>::add(const T& item) {
 template <typename T>
 void Collection<T>::remove(int index) {
     if (index < 0 || index >= static_cast<int>(items.size())) {
-        throw IndexOutOfBoundsException("Ошибка: Невозможно удалить элемент, индекс вне диапазона!");
+        throw IndexOutOfBoundsException("РќРµРІРѕР·РјРѕР¶РЅРѕ СѓРґР°Р»РёС‚СЊ СЌР»РµРјРµРЅС‚: РёРЅРґРµРєСЃ " + std::to_string(index + 1) +
+            " РІРЅРµ РґРёР°РїР°Р·РѕРЅР° (РІ РєРѕР»Р»РµРєС†РёРё СЌР»РµРјРµРЅС‚РѕРІ: " + std::to_string(items.size()) + ").");
     }
     items.erase(items.begin() + index);
 }
@@ -19,7 +18,8 @@ void Collection<T>::remove(int index) {
 template <typename T>
 T& Collection<T>::get(int index) {
     if (index < 0 || index >= static_cast<int>(items.size())) {
-        throw IndexOutOfBoundsException("Ошибка: Индекс элемента выходит за границы коллекции!");
+        throw IndexOutOfBoundsException("Р­Р»РµРјРµРЅС‚Р° СЃ РЅРѕРјРµСЂРѕРј " + std::to_string(index + 1) +
+            " РЅРµС‚ (РІ РєРѕР»Р»РµРєС†РёРё СЌР»РµРјРµРЅС‚РѕРІ: " + std::to_string(items.size()) + ").");
     }
     return items[index];
 }
@@ -27,7 +27,8 @@ T& Collection<T>::get(int index) {
 template <typename T>
 const T& Collection<T>::get(int index) const {
     if (index < 0 || index >= static_cast<int>(items.size())) {
-        throw IndexOutOfBoundsException("Ошибка: Индекс элемента выходит за границы коллекции!");
+        throw IndexOutOfBoundsException("Р­Р»РµРјРµРЅС‚Р° СЃ РЅРѕРјРµСЂРѕРј " + std::to_string(index + 1) +
+            " РЅРµС‚ (РІ РєРѕР»Р»РµРєС†РёРё СЌР»РµРјРµРЅС‚РѕРІ: " + std::to_string(items.size()) + ").");
     }
     return items[index];
 }
@@ -50,7 +51,7 @@ void Collection<T>::clear() {
 template <typename T>
 void Collection<T>::display() const {
     if (items.empty()) {
-        throw NotFoundException("Коллекция пуста!");
+        throw NotFoundException("РљРѕР»Р»РµРєС†РёСЏ РїСѓСЃС‚Р°!");
     }
     for (size_t i = 0; i < items.size(); ++i) {
         std::cout << "[" << i + 1 << "]\n" << items[i] << "\n";

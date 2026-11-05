@@ -16,14 +16,23 @@ private:
     void display_analyses() const;
     int select_patient() const;
 
-    int read_int(const std::string& prompt, int minVal, int maxVal) const;
-    double read_double(const std::string& prompt, double minVal) const;
-    bool is_valid_date(const std::string& date) const;
-    std::string read_date(const std::string& prompt) const;
+    // Ввод. Ничего не "лечат" молча: при нечисловом вводе бросают InvalidDataException.
+    // Диапазоны здесь НЕ проверяются: это делают сами методы, которые обращаются к данным.
+    int read_int(const std::string& prompt) const;
+    double read_double(const std::string& prompt) const;
+    bool read_yes_no(const std::string& prompt) const;
+
+    // Бросает ConstraintViolationException, если анализ уже сдан кем-то из пациентов.
+    static void check_analysis_not_used(const Analysis* analysis, const Collection<Patient>& patientList);
 
 public:
     Menu();
     ~Menu();
+
+    void print_menu() const;
+    // Показывает меню и выполняет ОДНО действие. Возвращает false, когда выбран выход.
+    // Исключения наружу не перехватываются: их ловит main.
+    bool process_command();
 
     void change_analysis_cost();
     void add_patient();
@@ -37,9 +46,6 @@ public:
     void demo_lab5_templates();
     void demo_lab6_exceptions();
 
-    void run();
-
     void search_analyses_by_price() const;
-
     void search_specific_analysis() const;
 };

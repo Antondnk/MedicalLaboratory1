@@ -1,17 +1,21 @@
 #include "UrineAnalysis.h"
+#include "exceptions/Exceptions.h"
 
 UrineAnalysis::UrineAnalysis()
-    : UrineAnalysis("", "", 0.0, 0.0, 0.0, false, 0.0) {
+    : Analysis(), isSterileContainer(false), containerCost(0.0) {
 }
 
 UrineAnalysis::UrineAnalysis(const string& name, const string& category, double baseCost,
     double minNormal, double maxNormal, bool sterile, double containerCost)
     : Analysis(name, category, baseCost, minNormal, maxNormal),
     isSterileContainer(sterile), containerCost(containerCost) {
+    if (!(containerCost >= 0)) {
+        throw InvalidDataException("РЎС‚РѕРёРјРѕСЃС‚СЊ РєРѕРЅС‚РµР№РЅРµСЂР° РЅРµ РјРѕР¶РµС‚ Р±С‹С‚СЊ РѕС‚СЂРёС†Р°С‚РµР»СЊРЅРѕР№.");
+    }
 }
 
 string UrineAnalysis::get_type() const {
-    return "Анализ мочи";
+    return "РђРЅР°Р»РёР· РјРѕС‡Рё";
 }
 
 double UrineAnalysis::calculate_total_cost() const {
@@ -20,11 +24,11 @@ double UrineAnalysis::calculate_total_cost() const {
 
 void UrineAnalysis::print_info(ostream& os) const {
     Analysis::print_info(os);
-    os << " \n\t Стерильный контейнер: " << (isSterileContainer ? "Да" : "Нет");
+    os << " \n\t РЎС‚РµСЂРёР»СЊРЅС‹Р№ РєРѕРЅС‚РµР№РЅРµСЂ: " << (isSterileContainer ? "Р”Р°" : "РќРµС‚");
     if (isSterileContainer) {
-        os << " (+" << containerCost << " руб.)";
+        os << " (+" << containerCost << " СЂСѓР±.)";
     }
-    os << " \n\t Срок годности образца: " << get_max_sample_validity_hours() << " ч.";
+    os << " \n\t РЎСЂРѕРє РіРѕРґРЅРѕСЃС‚Рё РѕР±СЂР°Р·С†Р°: " << get_max_sample_validity_hours() << " С‡.";
 }
 
 bool UrineAnalysis::get_is_sterile_container() const { return isSterileContainer; }

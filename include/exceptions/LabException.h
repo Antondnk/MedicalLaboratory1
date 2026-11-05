@@ -1,7 +1,8 @@
 #pragma once
-#include <stdexcept>
+#include <exception>
 #include <string>
 
+// Базовый класс всех исключений лабораторной работы.
 class LabException : public std::exception {
 protected:
     std::string message;
