@@ -6,7 +6,6 @@ using namespace std;
 
 class Analysis {
 protected:
-    // Проверка общих полей анализа. Бросает InvalidDataException.
     static void validate_fields(const string& name, double baseCost, double minNormal, double maxNormal);
 
     string name;

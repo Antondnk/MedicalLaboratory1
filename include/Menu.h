@@ -16,13 +16,10 @@ private:
     void display_analyses() const;
     int select_patient() const;
 
-    // Ввод. Ничего не "лечат" молча: при нечисловом вводе бросают InvalidDataException.
-    // Диапазоны здесь НЕ проверяются: это делают сами методы, которые обращаются к данным.
     int read_int(const std::string& prompt) const;
     double read_double(const std::string& prompt) const;
     bool read_yes_no(const std::string& prompt) const;
 
-    // Бросает ConstraintViolationException, если анализ уже сдан кем-то из пациентов.
     static void check_analysis_not_used(const Analysis* analysis, const Collection<Patient>& patientList);
 
 public:
@@ -30,8 +27,6 @@ public:
     ~Menu();
 
     void print_menu() const;
-    // Показывает меню и выполняет ОДНО действие. Возвращает false, когда выбран выход.
-    // Исключения наружу не перехватываются: их ловит main.
     bool process_command();
 
     void change_analysis_cost();

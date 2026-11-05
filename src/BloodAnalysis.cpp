@@ -4,7 +4,6 @@
 #define MORE 15
 #define LESS 5
 
-// Конструктор по умолчанию не валидирует: пустой объект-заготовка допустим.
 BloodAnalysis::BloodAnalysis()
     : Analysis(), requiresFasting(false), reagentCost(0.0) {
 }

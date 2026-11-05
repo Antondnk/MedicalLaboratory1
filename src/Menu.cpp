@@ -24,12 +24,6 @@ void Menu::clear_memory() {
     availableAnalyses.clear();
 }
 
-// ---------------------------------------------------------------------------
-// Ввод. Эти методы только читают и разбирают ввод. Если это не число, они
-// сбрасывают состояние cin (чтобы программа могла продолжить) и бросают исключение.
-// Допустимость значения (диапазон, знак, формат даты) проверяет тот код,
-// который это значение использует.
-// ---------------------------------------------------------------------------
 int Menu::read_int(const string& prompt) const {
     cout << prompt;
     int value;
@@ -116,12 +110,12 @@ void Menu::search_analyses_by_price() const {
 }
 
 void Menu::change_analysis_cost() {
-    display_analyses(); // бросит NotFoundException, если список пуст
+    display_analyses(); 
     int idx = read_int("Выберите номер анализа для изменения стоимости: ") - 1;
-    Analysis* analysis = availableAnalyses.get(idx); // IndexOutOfBoundsException при неверном номере
+    Analysis* analysis = availableAnalyses.get(idx);
     double newCost = read_double("Введите новую базовую стоимость: ");
 
-    analysis->set_base_cost(newCost); // InvalidDataException при отрицательной стоимости
+    analysis->set_base_cost(newCost); 
     cout << "Базовая стоимость анализа успешно изменена!\n";
 }
 
@@ -130,7 +124,7 @@ void Menu::add_patient() {
     cout << "Введите ФИО нового пациента: ";
     getline(cin, name);
 
-    patients.add(Patient(name)); // InvalidDataException, если ФИО пустое
+    patients.add(Patient(name)); 
     cout << "Пациент \"" << name << "\" успешно добавлен в базу!\n";
 }
 
@@ -145,16 +139,16 @@ void Menu::take_test() {
     int p_idx = select_patient();
     display_analyses();
     int a_idx = read_int("Введите номер анализа: ") - 1;
-    Analysis* analysis = availableAnalyses.get(a_idx); // IndexOutOfBoundsException
+    Analysis* analysis = availableAnalyses.get(a_idx);
 
     string date;
     cout << "Введите дату сдачи (например, 10.09.2026): ";
     getline(cin, date);
     double val = read_double("Введите полученный результат (число): ");
 
-    TestResult result(analysis, date, val); // InvalidDataException: неверная дата / отрицательное значение
+    TestResult result(analysis, date, val); 
 
-    patients.get(p_idx) += result; // DuplicateIdException, если такой результат уже есть
+    patients.get(p_idx) += result;
     cout << "Результат анализа успешно добавлен пациенту!\n";
 
     if (is_critical(result)) {
@@ -194,8 +188,6 @@ void Menu::add_analysis() {
 
     Analysis* newAnalysis = nullptr;
 
-    // Конструкторы сами проверяют данные и бросают InvalidDataException.
-    // Если конструктор бросил исключение, оператор new освобождает память сам, утечки нет.
     if (typeChoice == 1) {
         bool fasting = read_yes_no("Требуется сдача натощак (1 - Да, 0 - Нет): ");
         double reagentCost = read_double("Стоимость реагентов: ");
@@ -221,9 +213,9 @@ void Menu::add_analysis() {
 void Menu::remove_analysis() {
     display_analyses();
     int idx = read_int("Выберите номер анализа для удаления: ") - 1;
-    Analysis* targetAnalysis = availableAnalyses.get(idx); // IndexOutOfBoundsException
+    Analysis* targetAnalysis = availableAnalyses.get(idx); 
 
-    check_analysis_not_used(targetAnalysis, patients); // ConstraintViolationException: связь с результатами пациентов
+    check_analysis_not_used(targetAnalysis, patients); 
 
     delete targetAnalysis;
     availableAnalyses.remove(idx);
@@ -257,9 +249,9 @@ void Menu::compare_analyses() const {
     }
     display_analyses();
     int idx1 = read_int("Первый анализ: ") - 1;
-    const Analysis& a1 = *availableAnalyses.get(idx1); // IndexOutOfBoundsException
+    const Analysis& a1 = *availableAnalyses.get(idx1); 
     int idx2 = read_int("Второй анализ: ") - 1;
-    const Analysis& a2 = *availableAnalyses.get(idx2); // IndexOutOfBoundsException
+    const Analysis& a2 = *availableAnalyses.get(idx2); 
 
     if (idx1 == idx2) {
         throw InvalidDataException("Вы выбрали один и тот же анализ.");
@@ -290,7 +282,7 @@ int Menu::select_patient() const {
         cout << i + 1 << ". " << patients.get(i).get_full_name() << "\n";
     }
     int idx = read_int("Ваш выбор: ") - 1;
-    patients.get(idx); // IndexOutOfBoundsException, если номера нет
+    patients.get(idx); 
     return idx;
 }
 
@@ -327,12 +319,9 @@ void Menu::demo_lab5_templates() {
     cout << "2. Collection<Patient> содержит пациентов: " << patients.size() << "\n";
 }
 
-// Демонстрация: каждый вид исключения вызывается настоящим кодом (не вручную через throw)
-// и ловится своим catch. Программа после каждой ошибки продолжает работать.
 void Menu::demo_lab6_exceptions() {
     cout << "\n=== ДЕМОНСТРАЦИЯ ЛАБЫ №6 (Исключения) ===\n";
 
-    // Локальные объекты, чтобы не портить данные пользователя.
     BloodAnalysis demoAnalysis("Демо-анализ", "Демо", 10.0, 1.0, 5.0, false, 2.0);
     Patient demoPatient("Демо Пациент");
 
