@@ -3,6 +3,7 @@
 #include "UrineAnalysis.h"
 #include "GeneticAnalysis.h"
 #include "exceptions/Exceptions.h"
+#include <cctype>
 #include <climits>
 #include <cmath>
 #include <cstdio>
@@ -121,6 +122,48 @@ void write_analysis(std::ostream& os, const Analysis& a) {
     os << '\n';
 }
 
+bool is_valid_utf8(const std::string& s) {
+    size_t i = 0;
+    while (i < s.size()) {
+        const unsigned char c = static_cast<unsigned char>(s[i]);
+        size_t extra = 0;
+        unsigned char low = 0x80;
+        unsigned char high = 0xBF;
+        if (c < 0x80) {
+            extra = 0;
+        }
+        else if (c >= 0xC2 && c <= 0xDF) {
+            extra = 1;
+        }
+        else if (c >= 0xE0 && c <= 0xEF) {
+            extra = 2;
+            if (c == 0xE0) low = 0xA0;
+            if (c == 0xED) high = 0x9F;
+        }
+        else if (c >= 0xF0 && c <= 0xF4) {
+            extra = 3;
+            if (c == 0xF0) low = 0x90;
+            if (c == 0xF4) high = 0x8F;
+        }
+        else {
+            return false;
+        }
+        if (i + extra >= s.size()) {
+            return false;
+        }
+        for (size_t j = 1; j <= extra; ++j) {
+            const unsigned char next = static_cast<unsigned char>(s[i + j]);
+            const unsigned char from = (j == 1) ? low : 0x80;
+            const unsigned char to = (j == 1) ? high : 0xBF;
+            if (next < from || next > to) {
+                return false;
+            }
+        }
+        i += extra + 1;
+    }
+    return true;
+}
+
 class Reader {
     std::istream& in;
     std::string path;
@@ -144,6 +187,12 @@ public:
             ++lineNo;
             if (!line.empty() && line.back() == '\r') {
                 line.pop_back();
+            }
+            if (lineNo == 1 && line.compare(0, 3, "\xEF\xBB\xBF") == 0) {
+                line.erase(0, 3);
+            }
+            if (!is_valid_utf8(line)) {
+                fail("файл не в кодировке UTF-8 (сохраните его как \"UTF-8\" без изменения кодировки на ANSI/Unicode).");
             }
             if (line.find_first_not_of(" \t") != std::string::npos) {
                 return true;
@@ -171,6 +220,16 @@ class Fields {
     std::istringstream ss;
     const Reader& reader;
 
+    void require_separator(const std::string& what) {
+        if (ss.eof()) {
+            return;
+        }
+        const int next = ss.peek();
+        if (next != std::char_traits<char>::eof() && !std::isspace(static_cast<unsigned char>(next))) {
+            reader.fail("после поля (" + what + ") должен идти пробел: поля разделяются пробелами.");
+        }
+    }
+
 public:
     Fields(const std::string& line, const Reader& r) : ss(line), reader(r) {
         ss.imbue(std::locale::classic());
@@ -189,6 +248,7 @@ public:
         if (!(ss >> v) || v < INT_MIN || v > INT_MAX) {
             reader.fail("ожидалось целое число (" + what + ").");
         }
+        require_separator(what);
         return static_cast<int>(v);
     }
 
@@ -197,6 +257,7 @@ public:
         if (!(ss >> v)) {
             reader.fail("ожидалось число (" + what + ").");
         }
+        require_separator(what);
         return v;
     }
 
@@ -213,6 +274,7 @@ public:
         if (!read_text(ss, s)) {
             reader.fail("ожидалась строка в кавычках (" + what + ").");
         }
+        require_separator(what);
         return s;
     }
 

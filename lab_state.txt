@@ -5,5 +5,6 @@ A URINE 2 "Urinalysis according to Nechiporenko" "Клиника" 12 0 2000 1 3
 A GENETIC 3 "PCR test for infections" "Генетика" 80 0 0 "BRCA1" 1.5
 A GENETIC 4 "qerqeg" "Геerq3455тика" 850 1 5 "BR31A1" 10
 PATIENTS 1
-P 1 "Иванов Иван Иванович" 0
+P 1 "Иванов Иван Иванович" 1
+R 1 "10.09.2026" 6.5
 END
