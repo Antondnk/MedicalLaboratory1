@@ -8,6 +8,7 @@ using namespace std;
 
 class Patient {
 private:
+    int id;
     string fullName;
     vector<TestResult> results;
 
@@ -15,6 +16,8 @@ public:
     Patient();
     explicit Patient(const string& fullName);
 
+    int get_id() const;
+    void set_id(int newId);
     string get_full_name() const;
     const vector<TestResult>& get_results() const;
 

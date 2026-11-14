@@ -1,16 +1,222 @@
 #include "Menu.h"
+#include "Logger.h"
+#include "ReportWriter.h"
 #include "exceptions/Exceptions.h"
+#include <algorithm>
+#include <fstream>
 #include <iostream>
+#include <sstream>
 #include <stdexcept>
+#include <vector>
 
 using namespace std;
 
-Menu::Menu() {
-    patients.add(Patient("Иванов Иван Иванович"));
+namespace {
 
-    availableAnalyses.add(new BloodAnalysis("General blood test", "Гематология", 18.0, 4.0, 9.0, true, 6.0));
-    availableAnalyses.add(new UrineAnalysis("Urinalysis according to Nechiporenko", "Клиника", 12.0, 0.0, 2000.0, true, 3.0));
-    availableAnalyses.add(new GeneticAnalysis("PCR test for infections", "Генетика", 80.0, 0.0, 0.0, "BRCA1", 1.5));
+const string STATE_FILE = "lab_state.txt";
+const string JOURNAL_FILE = "lab_journal.log";
+const string REPORT_FILE = "lab_report.txt";
+const size_t JOURNAL_TAIL = 30;
+
+string num(double value) {
+    ostringstream os;
+    os << value;
+    return os.str();
+}
+
+}
+
+Menu::Menu() : nextAnalysisId(1), nextPatientId(1), autosaveAllowed(true) {
+    add_default_data();
+}
+
+void Menu::add_default_data() {
+    register_patient(Patient("Иванов Иван Иванович"));
+
+    register_analysis(new BloodAnalysis("General blood test", "Гематология", 18.0, 4.0, 9.0, true, 6.0));
+    register_analysis(new UrineAnalysis("Urinalysis according to Nechiporenko", "Клиника", 12.0, 0.0, 2000.0, true, 3.0));
+    register_analysis(new GeneticAnalysis("PCR test for infections", "Генетика", 80.0, 0.0, 0.0, "BRCA1", 1.5));
+}
+
+void Menu::register_analysis(Analysis* analysis) {
+    try {
+        analysis->set_id(nextAnalysisId);
+        availableAnalyses.add(analysis);
+    }
+    catch (...) {
+        delete analysis;
+        throw;
+    }
+    ++nextAnalysisId;
+}
+
+int Menu::register_patient(Patient patient) {
+    patient.set_id(nextPatientId);
+    patients.add(patient);
+    return nextPatientId++;
+}
+
+bool Menu::analysis_name_exists(const string& name) const {
+    for (int i = 0; i < availableAnalyses.size(); ++i) {
+        if (availableAnalyses.get(i)->get_name() == name) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void Menu::journal(const string& message) const {
+    try {
+        Logger::append(JOURNAL_FILE, message);
+    }
+    catch (const LabException& e) {
+        cerr << "\n[ЖУРНАЛ] Запись в журнал не выполнена: " << e.what() << "\n";
+    }
+}
+
+string Menu::read_path(const string& prompt, const string& defaultPath) const {
+    cout << prompt << " [Enter - \"" << defaultPath << "\"]: ";
+    string path;
+    if (!getline(cin, path)) {
+        throw runtime_error("Ввод данных прекращён (конец потока ввода).");
+    }
+    size_t first = path.find_first_not_of(" \t\r");
+    if (first == string::npos) {
+        return defaultPath;
+    }
+    size_t last = path.find_last_not_of(" \t\r");
+    path = path.substr(first, last - first + 1);
+    if (path.size() >= 2 && path.front() == '"' && path.back() == '"') {
+        path = path.substr(1, path.size() - 2);
+    }
+    return path.empty() ? defaultPath : path;
+}
+
+void Menu::apply_state(LoadedState&& state) {
+    clear_memory();
+    patients.clear();
+
+    int maxAnalysisId = 0;
+    for (auto& analysis : state.analyses) {
+        maxAnalysisId = max(maxAnalysisId, analysis->get_id());
+        availableAnalyses.add(analysis.release());
+    }
+    state.analyses.clear();
+
+    int maxPatientId = 0;
+    for (const auto& patient : state.patients) {
+        maxPatientId = max(maxPatientId, patient.get_id());
+        patients.add(patient);
+    }
+
+    nextAnalysisId = maxAnalysisId + 1;
+    nextPatientId = maxPatientId + 1;
+}
+
+void Menu::load_on_startup() {
+    if (!FileStorage::exists(STATE_FILE)) {
+        cout << "Файл состояния \"" << STATE_FILE << "\" не найден: загружены данные по умолчанию.\n";
+        return;
+    }
+    try {
+        apply_state(FileStorage::load(STATE_FILE));
+    }
+    catch (const LabException& e) {
+        autosaveAllowed = false;
+        journal("ОШИБКА восстановления состояния при запуске из файла \"" + STATE_FILE + "\": " + e.what());
+        cout << "Восстановить состояние из файла \"" << STATE_FILE << "\" не удалось: работа начата с данных по умолчанию.\n"
+             << "Автосохранение при выходе отключено, чтобы не затереть файл. Исправьте его или сохраните состояние вручную (пункт 14).\n"
+             << "Причина:";
+        throw;
+    }
+    cout << "Состояние восстановлено из файла \"" << STATE_FILE << "\" (анализов: " << availableAnalyses.size()
+         << ", пациентов: " << patients.size() << ").\n";
+    journal("Состояние восстановлено при запуске из файла \"" + STATE_FILE + "\"");
+}
+
+void Menu::save_state() {
+    string path = read_path("Файл для сохранения состояния", STATE_FILE);
+    try {
+        FileStorage::save(path, availableAnalyses, patients);
+    }
+    catch (const LabException& e) {
+        journal("ОШИБКА сохранения состояния в файл \"" + path + "\": " + e.what());
+        throw;
+    }
+    autosaveAllowed = true;
+    cout << "Состояние сохранено в файл \"" << path << "\" (анализов: " << availableAnalyses.size()
+         << ", пациентов: " << patients.size() << ").\n";
+    journal("Состояние сохранено в файл \"" + path + "\"");
+}
+
+void Menu::load_state() {
+    string path = read_path("Файл для загрузки состояния", STATE_FILE);
+    try {
+        apply_state(FileStorage::load(path));
+    }
+    catch (const LabException& e) {
+        journal("ОШИБКА загрузки состояния из файла \"" + path + "\": " + e.what());
+        throw;
+    }
+    autosaveAllowed = true;
+    cout << "Состояние загружено из файла \"" << path << "\" (анализов: " << availableAnalyses.size()
+         << ", пациентов: " << patients.size() << ").\n";
+    journal("Состояние загружено из файла \"" + path + "\"");
+}
+
+void Menu::save_on_exit() {
+    if (!autosaveAllowed) {
+        cout << "Автосохранение пропущено: файл состояния не перезаписывается.\n";
+        return;
+    }
+    try {
+        FileStorage::save(STATE_FILE, availableAnalyses, patients);
+    }
+    catch (const LabException& e) {
+        autosaveAllowed = false;
+        journal("ОШИБКА автосохранения при выходе в файл \"" + STATE_FILE + "\": " + e.what());
+        cout << "Выход отменён. Повторите выход, чтобы закрыть программу без сохранения, "
+             << "или сохраните состояние в другой файл (пункт 14).\n";
+        throw;
+    }
+    cout << "Состояние сохранено в файл \"" << STATE_FILE << "\".\n";
+    journal("Состояние сохранено при выходе в файл \"" + STATE_FILE + "\"");
+}
+
+void Menu::show_journal() const {
+    ifstream in(JOURNAL_FILE);
+    if (!in.is_open()) {
+        throw FileOpenException("Журнал \"" + JOURNAL_FILE + "\" ещё не создан или недоступен для чтения.");
+    }
+
+    vector<string> lines;
+    string line;
+    while (getline(in, line)) {
+        lines.push_back(line);
+    }
+    if (in.bad()) {
+        throw FileReadException("Ошибка чтения журнала \"" + JOURNAL_FILE + "\".");
+    }
+
+    cout << "\n=== ЖУРНАЛ (" << JOURNAL_FILE << ") ===\n";
+    if (lines.empty()) {
+        cout << "Журнал пуст.\n";
+        return;
+    }
+    size_t start = lines.size() > JOURNAL_TAIL ? lines.size() - JOURNAL_TAIL : 0;
+    if (start > 0) {
+        cout << "(показаны последние " << JOURNAL_TAIL << " из " << lines.size() << " записей)\n";
+    }
+    for (size_t i = start; i < lines.size(); ++i) {
+        cout << lines[i] << "\n";
+    }
+}
+
+void Menu::write_report() {
+    string path = read_path("Файл для отчёта", REPORT_FILE);
+    ReportWriter::write(path, availableAnalyses, patients);
+    cout << "Отчёт сформирован и записан в файл \"" << path << "\".\n";
+    journal("Сформирован текстовый отчёт в файл \"" + path + "\"");
 }
 
 Menu::~Menu() {
@@ -115,8 +321,11 @@ void Menu::change_analysis_cost() {
     Analysis* analysis = availableAnalyses.get(idx);
     double newCost = read_double("Введите новую базовую стоимость: ");
 
-    analysis->set_base_cost(newCost); 
+    double oldCost = analysis->get_base_cost();
+    analysis->set_base_cost(newCost);
     cout << "Базовая стоимость анализа успешно изменена!\n";
+    journal("Изменена базовая стоимость анализа #" + to_string(analysis->get_id()) + " \"" + analysis->get_name() +
+        "\": " + num(oldCost) + " -> " + num(newCost));
 }
 
 void Menu::add_patient() {
@@ -124,8 +333,9 @@ void Menu::add_patient() {
     cout << "Введите ФИО нового пациента: ";
     getline(cin, name);
 
-    patients.add(Patient(name)); 
+    int id = register_patient(Patient(name));
     cout << "Пациент \"" << name << "\" успешно добавлен в базу!\n";
+    journal("Добавлен пациент #" + to_string(id) + " \"" + name + "\"");
 }
 
 void Menu::take_test() {
@@ -150,6 +360,9 @@ void Menu::take_test() {
 
     patients.get(p_idx) += result;
     cout << "Результат анализа успешно добавлен пациенту!\n";
+    journal("Пациенту #" + to_string(patients.get(p_idx).get_id()) + " добавлен результат анализа #" +
+        to_string(analysis->get_id()) + " \"" + analysis->get_name() + "\" от " + date + ": " +
+        num(val) + " (" + result.get_status() + ")");
 
     if (is_critical(result)) {
         cout << "ВНИМАНИЕ: Результат является КРИТИЧЕСКИМ (отклонение от нормы > 20%)!\n";
@@ -179,6 +392,9 @@ void Menu::add_analysis() {
     string name, category;
     cout << "Введите название анализа: ";
     getline(cin, name);
+    if (analysis_name_exists(name)) {
+        throw DuplicateIdException("Анализ с названием \"" + name + "\" уже есть в каталоге.");
+    }
     cout << "Введите категорию: ";
     getline(cin, category);
 
@@ -206,8 +422,9 @@ void Menu::add_analysis() {
         newAnalysis = new GeneticAnalysis(name, category, baseCost, minN, maxN, gene, multiplier);
     }
 
-    availableAnalyses.add(newAnalysis);
+    register_analysis(newAnalysis);
     cout << "Новый вид анализа успешно добавлен в шаблонный контейнер!\n";
+    journal("Добавлен анализ #" + to_string(newAnalysis->get_id()) + " \"" + name + "\" (" + newAnalysis->get_type() + ")");
 }
 
 void Menu::remove_analysis() {
@@ -217,9 +434,12 @@ void Menu::remove_analysis() {
 
     check_analysis_not_used(targetAnalysis, patients); 
 
+    const int removedId = targetAnalysis->get_id();
+    const string removedName = targetAnalysis->get_name();
     delete targetAnalysis;
     availableAnalyses.remove(idx);
     cout << "Вид анализа удален из базы.\n";
+    journal("Удалён анализ #" + to_string(removedId) + " \"" + removedName + "\"");
 }
 
 void Menu::remove_test_result() {
@@ -239,8 +459,11 @@ void Menu::remove_test_result() {
         throw IndexOutOfBoundsException("Результата с номером " + to_string(idx + 1) +
             " нет (у пациента результатов: " + to_string(results.size()) + ").");
     }
-    patients.get(p_idx) -= results[idx];
+    const TestResult removed = results[idx];
+    patients.get(p_idx) -= removed;
     cout << "Результат анализа удален у пациента.\n";
+    journal("У пациента #" + to_string(patients.get(p_idx).get_id()) + " удалён результат анализа \"" +
+        removed.get_analysis()->get_name() + "\" от " + removed.get_date());
 }
 
 void Menu::compare_analyses() const {
@@ -397,6 +620,11 @@ void Menu::print_menu() const {
         << "11. [Лаба №6] Демонстрация исключений\n"
         << "12. [Лаба №5] Поиск анализов по цене (find_by)\n"
         << "13. [Лаба №5] Точный поиск объекта\n"
+        << "----------------------------------------\n"
+        << "14. [Лаба №7] Сохранить состояние в файл\n"
+        << "15. [Лаба №7] Загрузить состояние из файла\n"
+        << "16. [Лаба №7] Показать журнал\n"
+        << "17. [Лаба №7] Сформировать текстовый отчёт\n"
         << "0. Выход\n";
 }
 
@@ -418,11 +646,16 @@ bool Menu::process_command() {
     case 11: demo_lab6_exceptions(); break;
     case 12: search_analyses_by_price(); break;
     case 13: search_specific_analysis(); break;
+    case 14: save_state(); break;
+    case 15: load_state(); break;
+    case 16: show_journal(); break;
+    case 17: write_report(); break;
     case 0:
+        save_on_exit();
         cout << "Завершение работы программы...\n";
         return false;
     default:
-        throw InvalidDataException("Пункта меню №" + to_string(choice) + " не существует (допустимо 0-13).");
+        throw InvalidDataException("Пункта меню №" + to_string(choice) + " не существует (допустимо 0-17).");
     }
     return true;
 }

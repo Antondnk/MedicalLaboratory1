@@ -3,12 +3,21 @@
 #include "exceptions/Exceptions.h"
 #include <algorithm>
 
-Patient::Patient() : fullName("") {}
+Patient::Patient() : id(0), fullName("") {}
 
-Patient::Patient(const string& fullName) : fullName(fullName) {
+Patient::Patient(const string& fullName) : id(0), fullName(fullName) {
     if (is_blank(fullName)) {
         throw InvalidDataException("ФИО пациента не может быть пустым.");
     }
+}
+
+int Patient::get_id() const { return id; }
+
+void Patient::set_id(int newId) {
+    if (newId <= 0) {
+        throw InvalidDataException("Идентификатор пациента должен быть положительным.");
+    }
+    id = newId;
 }
 
 string Patient::get_full_name() const { return fullName; }

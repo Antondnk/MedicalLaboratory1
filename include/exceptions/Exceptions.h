@@ -5,3 +5,6 @@
 #include "DuplicateIdException.h"
 #include "InvalidDataException.h"
 #include "ConstraintViolationException.h"
+#include "FileOpenException.h"
+#include "FileReadException.h"
+#include "FileWriteException.h"

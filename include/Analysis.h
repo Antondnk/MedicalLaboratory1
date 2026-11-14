@@ -13,6 +13,7 @@ protected:
     double baseCost;
     double minNormal;
     double maxNormal;
+    int id;
 
 public:
     Analysis();
@@ -25,6 +26,8 @@ public:
     double get_base_cost() const;
     double get_min_normal() const;
     double get_max_normal() const;
+    int get_id() const;
+    void set_id(int newId);
     void set_base_cost(double newCost);
 
     virtual string get_type() const = 0;

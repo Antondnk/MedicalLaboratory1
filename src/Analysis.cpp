@@ -20,7 +20,7 @@ void Analysis::validate_fields(const string& name, double baseCost, double minNo
 }
 
 Analysis::Analysis()
-    : name(""), category(""), baseCost(0.0), minNormal(0.0), maxNormal(0.0) {
+    : name(""), category(""), baseCost(0.0), minNormal(0.0), maxNormal(0.0), id(0) {
 }
 
 Analysis::Analysis(const string& name, const string& category, double baseCost, double minNormal, double maxNormal) {
@@ -30,6 +30,7 @@ Analysis::Analysis(const string& name, const string& category, double baseCost, 
     this->baseCost = baseCost;
     this->minNormal = minNormal;
     this->maxNormal = maxNormal;
+    this->id = 0;
 }
 
 string Analysis::get_name() const { return name; }
@@ -37,6 +38,14 @@ string Analysis::get_category() const { return category; }
 double Analysis::get_base_cost() const { return baseCost; }
 double Analysis::get_min_normal() const { return minNormal; }
 double Analysis::get_max_normal() const { return maxNormal; }
+int Analysis::get_id() const { return id; }
+
+void Analysis::set_id(int newId) {
+    if (newId <= 0) {
+        throw InvalidDataException("Идентификатор анализа должен быть положительным.");
+    }
+    id = newId;
+}
 
 void Analysis::set_base_cost(double newCost) {
     if (!(newCost >= 0)) {
