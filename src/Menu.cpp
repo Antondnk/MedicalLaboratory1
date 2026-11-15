@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <iterator>
 #include <sstream>
 #include <stdexcept>
 #include <vector>
@@ -24,6 +25,15 @@ string num(double value) {
     return os.str();
 }
 
+string trim(const string& s) {
+    const size_t first = s.find_first_not_of(" \t\r");
+    if (first == string::npos) {
+        return "";
+    }
+    const size_t last = s.find_last_not_of(" \t\r");
+    return s.substr(first, last - first + 1);
+}
+
 }
 
 Menu::Menu() : nextAnalysisId(1), nextPatientId(1), autosaveAllowed(true) {
@@ -33,21 +43,17 @@ Menu::Menu() : nextAnalysisId(1), nextPatientId(1), autosaveAllowed(true) {
 void Menu::add_default_data() {
     register_patient(Patient("Иванов Иван Иванович"));
 
-    register_analysis(new BloodAnalysis("General blood test", "Гематология", 18.0, 4.0, 9.0, true, 6.0));
-    register_analysis(new UrineAnalysis("Urinalysis according to Nechiporenko", "Клиника", 12.0, 0.0, 2000.0, true, 3.0));
-    register_analysis(new GeneticAnalysis("PCR test for infections", "Генетика", 80.0, 0.0, 0.0, "BRCA1", 1.5));
+    register_analysis(make_unique<BloodAnalysis>("General blood test", "Гематология", 18.0, 4.0, 9.0, true, 6.0));
+    register_analysis(make_unique<UrineAnalysis>("Urinalysis according to Nechiporenko", "Клиника", 12.0, 0.0, 2000.0, true, 3.0));
+    register_analysis(make_unique<GeneticAnalysis>("PCR test for infections", "Генетика", 80.0, 0.0, 0.0, "BRCA1", 1.5));
 }
 
-void Menu::register_analysis(Analysis* analysis) {
-    try {
-        analysis->set_id(nextAnalysisId);
-        availableAnalyses.add(analysis);
-    }
-    catch (...) {
-        delete analysis;
-        throw;
-    }
+int Menu::register_analysis(unique_ptr<Analysis> analysis) {
+    analysis->set_id(nextAnalysisId);
+    const int id = nextAnalysisId;
+    catalog[id] = move(analysis);
     ++nextAnalysisId;
+    return id;
 }
 
 int Menu::register_patient(Patient patient) {
@@ -57,12 +63,15 @@ int Menu::register_patient(Patient patient) {
 }
 
 bool Menu::analysis_name_exists(const string& name) const {
-    for (int i = 0; i < availableAnalyses.size(); ++i) {
-        if (availableAnalyses.get(i)->get_name() == name) {
-            return true;
-        }
+    return Analytics::find_by_name(catalog, name) != nullptr;
+}
+
+Analysis* Menu::require_analysis(int id) const {
+    auto it = catalog.find(id);
+    if (it == catalog.end()) {
+        throw NotFoundException("Анализа с ID " + to_string(id) + " нет в каталоге.");
     }
-    return false;
+    return it->second.get();
 }
 
 void Menu::journal(const string& message) const {
@@ -72,162 +81,6 @@ void Menu::journal(const string& message) const {
     catch (const LabException& e) {
         cerr << "\n[ЖУРНАЛ] Запись в журнал не выполнена: " << e.what() << "\n";
     }
-}
-
-string Menu::read_path(const string& prompt, const string& defaultPath) const {
-    cout << prompt << " [Enter - \"" << defaultPath << "\"]: ";
-    string path;
-    if (!getline(cin, path)) {
-        throw runtime_error("Ввод данных прекращён (конец потока ввода).");
-    }
-    size_t first = path.find_first_not_of(" \t\r");
-    if (first == string::npos) {
-        return defaultPath;
-    }
-    size_t last = path.find_last_not_of(" \t\r");
-    path = path.substr(first, last - first + 1);
-    if (path.size() >= 2 && path.front() == '"' && path.back() == '"') {
-        path = path.substr(1, path.size() - 2);
-    }
-    return path.empty() ? defaultPath : path;
-}
-
-void Menu::apply_state(LoadedState&& state) {
-    clear_memory();
-    patients.clear();
-
-    int maxAnalysisId = 0;
-    for (auto& analysis : state.analyses) {
-        maxAnalysisId = max(maxAnalysisId, analysis->get_id());
-        availableAnalyses.add(analysis.release());
-    }
-    state.analyses.clear();
-
-    int maxPatientId = 0;
-    for (const auto& patient : state.patients) {
-        maxPatientId = max(maxPatientId, patient.get_id());
-        patients.add(patient);
-    }
-
-    nextAnalysisId = maxAnalysisId + 1;
-    nextPatientId = maxPatientId + 1;
-}
-
-void Menu::load_on_startup() {
-    if (!FileStorage::exists(STATE_FILE)) {
-        cout << "Файл состояния \"" << STATE_FILE << "\" не найден: загружены данные по умолчанию.\n";
-        return;
-    }
-    try {
-        apply_state(FileStorage::load(STATE_FILE));
-    }
-    catch (const LabException& e) {
-        autosaveAllowed = false;
-        journal("ОШИБКА восстановления состояния при запуске из файла \"" + STATE_FILE + "\": " + e.what());
-        cout << "Восстановить состояние из файла \"" << STATE_FILE << "\" не удалось: работа начата с данных по умолчанию.\n"
-             << "Автосохранение при выходе отключено, чтобы не затереть файл. Исправьте его или сохраните состояние вручную (пункт 14).\n"
-             << "Причина:";
-        throw;
-    }
-    cout << "Состояние восстановлено из файла \"" << STATE_FILE << "\" (анализов: " << availableAnalyses.size()
-         << ", пациентов: " << patients.size() << ").\n";
-    journal("Состояние восстановлено при запуске из файла \"" + STATE_FILE + "\"");
-}
-
-void Menu::save_state() {
-    string path = read_path("Файл для сохранения состояния", STATE_FILE);
-    try {
-        FileStorage::save(path, availableAnalyses, patients);
-    }
-    catch (const LabException& e) {
-        journal("ОШИБКА сохранения состояния в файл \"" + path + "\": " + e.what());
-        throw;
-    }
-    autosaveAllowed = true;
-    cout << "Состояние сохранено в файл \"" << path << "\" (анализов: " << availableAnalyses.size()
-         << ", пациентов: " << patients.size() << ").\n";
-    journal("Состояние сохранено в файл \"" + path + "\"");
-}
-
-void Menu::load_state() {
-    string path = read_path("Файл для загрузки состояния", STATE_FILE);
-    try {
-        apply_state(FileStorage::load(path));
-    }
-    catch (const LabException& e) {
-        journal("ОШИБКА загрузки состояния из файла \"" + path + "\": " + e.what());
-        throw;
-    }
-    autosaveAllowed = true;
-    cout << "Состояние загружено из файла \"" << path << "\" (анализов: " << availableAnalyses.size()
-         << ", пациентов: " << patients.size() << ").\n";
-    journal("Состояние загружено из файла \"" + path + "\"");
-}
-
-void Menu::save_on_exit() {
-    if (!autosaveAllowed) {
-        cout << "Автосохранение пропущено: файл состояния не перезаписывается.\n";
-        return;
-    }
-    try {
-        FileStorage::save(STATE_FILE, availableAnalyses, patients);
-    }
-    catch (const LabException& e) {
-        autosaveAllowed = false;
-        journal("ОШИБКА автосохранения при выходе в файл \"" + STATE_FILE + "\": " + e.what());
-        cout << "Выход отменён. Повторите выход, чтобы закрыть программу без сохранения, "
-             << "или сохраните состояние в другой файл (пункт 14).\n";
-        throw;
-    }
-    cout << "Состояние сохранено в файл \"" << STATE_FILE << "\".\n";
-    journal("Состояние сохранено при выходе в файл \"" + STATE_FILE + "\"");
-}
-
-void Menu::show_journal() const {
-    ifstream in(JOURNAL_FILE);
-    if (!in.is_open()) {
-        throw FileOpenException("Журнал \"" + JOURNAL_FILE + "\" ещё не создан или недоступен для чтения.");
-    }
-
-    vector<string> lines;
-    string line;
-    while (getline(in, line)) {
-        lines.push_back(line);
-    }
-    if (in.bad()) {
-        throw FileReadException("Ошибка чтения журнала \"" + JOURNAL_FILE + "\".");
-    }
-
-    cout << "\n=== ЖУРНАЛ (" << JOURNAL_FILE << ") ===\n";
-    if (lines.empty()) {
-        cout << "Журнал пуст.\n";
-        return;
-    }
-    size_t start = lines.size() > JOURNAL_TAIL ? lines.size() - JOURNAL_TAIL : 0;
-    if (start > 0) {
-        cout << "(показаны последние " << JOURNAL_TAIL << " из " << lines.size() << " записей)\n";
-    }
-    for (size_t i = start; i < lines.size(); ++i) {
-        cout << lines[i] << "\n";
-    }
-}
-
-void Menu::write_report() {
-    string path = read_path("Файл для отчёта", REPORT_FILE);
-    ReportWriter::write(path, availableAnalyses, patients);
-    cout << "Отчёт сформирован и записан в файл \"" << path << "\".\n";
-    journal("Сформирован текстовый отчёт в файл \"" + path + "\"");
-}
-
-Menu::~Menu() {
-    clear_memory();
-}
-
-void Menu::clear_memory() {
-    for (int i = 0; i < availableAnalyses.size(); ++i) {
-        delete availableAnalyses.get(i);
-    }
-    availableAnalyses.clear();
 }
 
 int Menu::read_int(const string& prompt) const {
@@ -268,30 +121,172 @@ bool Menu::read_yes_no(const string& prompt) const {
     return answer == 1;
 }
 
-void Menu::check_analysis_not_used(const Analysis* analysis, const Collection<Patient>& patientList) {
-    for (int i = 0; i < patientList.size(); ++i) {
-        for (const auto& res : patientList.get(i).get_results()) {
-            if (res.get_analysis() == analysis) {
-                throw ConstraintViolationException(
-                    "Анализ \"" + analysis->get_name() + "\" уже сдан пациентом \"" +
-                    patientList.get(i).get_full_name() + "\". Удаление запрещено.");
-            }
-        }
+string Menu::read_line(const string& prompt) const {
+    cout << prompt;
+    string line;
+    if (!getline(cin, line)) {
+        throw runtime_error("Ввод данных прекращён (конец потока ввода).");
     }
+    return trim(line);
+}
+
+string Menu::read_path(const string& prompt, const string& defaultPath) const {
+    string path = read_line(prompt + " [Enter - \"" + defaultPath + "\"]: ");
+    if (path.size() >= 2 && path.front() == '"' && path.back() == '"') {
+        path = path.substr(1, path.size() - 2);
+    }
+    return path.empty() ? defaultPath : path;
+}
+
+void Menu::check_analysis_not_used(const Analysis* analysis, const Collection<Patient>& patientList) {
+    auto owner = find_if(patientList.begin(), patientList.end(), [analysis](const Patient& patient) {
+        const auto& results = patient.get_results();
+        return any_of(results.begin(), results.end(),
+            [analysis](const TestResult& result) { return result.get_analysis() == analysis; });
+        });
+    if (owner != patientList.end()) {
+        throw ConstraintViolationException(
+            "Анализ \"" + analysis->get_name() + "\" уже сдан пациентом \"" +
+            owner->get_full_name() + "\". Удаление запрещено.");
+    }
+}
+
+void Menu::apply_state(LoadedState&& state) {
+    patients.clear();
+    catalog = move(state.analyses);
+
+    int maxPatientId = 0;
+    for_each(state.patients.begin(), state.patients.end(), [this, &maxPatientId](const Patient& patient) {
+        maxPatientId = max(maxPatientId, patient.get_id());
+        patients.add(patient);
+        });
+
+    nextAnalysisId = catalog.empty() ? 1 : catalog.rbegin()->first + 1;
+    nextPatientId = maxPatientId + 1;
+}
+
+void Menu::load_on_startup() {
+    if (!FileStorage::exists(STATE_FILE)) {
+        cout << "Файл состояния \"" << STATE_FILE << "\" не найден: загружены данные по умолчанию.\n";
+        return;
+    }
+    try {
+        apply_state(FileStorage::load(STATE_FILE));
+    }
+    catch (const LabException& e) {
+        autosaveAllowed = false;
+        journal("ОШИБКА восстановления состояния при запуске из файла \"" + STATE_FILE + "\": " + e.what());
+        cout << "Восстановить состояние из файла \"" << STATE_FILE << "\" не удалось: работа начата с данных по умолчанию.\n"
+             << "Автосохранение при выходе отключено, чтобы не затереть файл. Исправьте его или сохраните состояние вручную (пункт 14).\n"
+             << "Причина:";
+        throw;
+    }
+    cout << "Состояние восстановлено из файла \"" << STATE_FILE << "\" (анализов: " << catalog.size()
+         << ", пациентов: " << patients.size() << ").\n";
+    journal("Состояние восстановлено при запуске из файла \"" + STATE_FILE + "\"");
+}
+
+void Menu::save_state() {
+    string path = read_path("Файл для сохранения состояния", STATE_FILE);
+    try {
+        FileStorage::save(path, catalog, patients);
+    }
+    catch (const LabException& e) {
+        journal("ОШИБКА сохранения состояния в файл \"" + path + "\": " + e.what());
+        throw;
+    }
+    autosaveAllowed = true;
+    cout << "Состояние сохранено в файл \"" << path << "\" (анализов: " << catalog.size()
+         << ", пациентов: " << patients.size() << ").\n";
+    journal("Состояние сохранено в файл \"" + path + "\"");
+}
+
+void Menu::load_state() {
+    string path = read_path("Файл для загрузки состояния", STATE_FILE);
+    try {
+        apply_state(FileStorage::load(path));
+    }
+    catch (const LabException& e) {
+        journal("ОШИБКА загрузки состояния из файла \"" + path + "\": " + e.what());
+        throw;
+    }
+    autosaveAllowed = true;
+    cout << "Состояние загружено из файла \"" << path << "\" (анализов: " << catalog.size()
+         << ", пациентов: " << patients.size() << ").\n";
+    journal("Состояние загружено из файла \"" + path + "\"");
+}
+
+void Menu::save_on_exit() {
+    if (!autosaveAllowed) {
+        cout << "Автосохранение пропущено: файл состояния не перезаписывается.\n";
+        return;
+    }
+    try {
+        FileStorage::save(STATE_FILE, catalog, patients);
+    }
+    catch (const LabException& e) {
+        autosaveAllowed = false;
+        journal("ОШИБКА автосохранения при выходе в файл \"" + STATE_FILE + "\": " + e.what());
+        cout << "Выход отменён. Повторите выход, чтобы закрыть программу без сохранения, "
+             << "или сохраните состояние в другой файл (пункт 14).\n";
+        throw;
+    }
+    cout << "Состояние сохранено в файл \"" << STATE_FILE << "\".\n";
+    journal("Состояние сохранено при выходе в файл \"" + STATE_FILE + "\"");
+}
+
+void Menu::show_journal() const {
+    ifstream in(JOURNAL_FILE);
+    if (!in.is_open()) {
+        throw FileOpenException("Журнал \"" + JOURNAL_FILE + "\" ещё не создан или недоступен для чтения.");
+    }
+
+    vector<string> lines;
+    string line;
+    while (getline(in, line)) {
+        lines.push_back(line);
+    }
+    if (in.bad()) {
+        throw FileReadException("Ошибка чтения журнала \"" + JOURNAL_FILE + "\".");
+    }
+
+    cout << "\n=== ЖУРНАЛ (" << JOURNAL_FILE << ") ===\n";
+    if (lines.empty()) {
+        cout << "Журнал пуст.\n";
+        return;
+    }
+    const size_t start = lines.size() > JOURNAL_TAIL ? lines.size() - JOURNAL_TAIL : 0;
+    if (start > 0) {
+        cout << "(показаны последние " << JOURNAL_TAIL << " из " << lines.size() << " записей)\n";
+    }
+    copy(lines.begin() + start, lines.end(), ostream_iterator<string>(cout, "\n"));
+}
+
+void Menu::write_report() {
+    string path = read_path("Файл для отчёта", REPORT_FILE);
+    ReportWriter::write(path, catalog, patients);
+    cout << "Отчёт сформирован и записан в файл \"" << path << "\".\n";
+    journal("Сформирован текстовый отчёт в файл \"" + path + "\"");
 }
 
 void Menu::display_analyses() const {
-    if (availableAnalyses.empty()) {
+    if (catalog.empty()) {
         throw NotFoundException("Список доступных анализов пуст.");
     }
     cout << "\n=== СПИСОК ДОСТУПНЫХ АНАЛИЗОВ ===\n";
-    for (int i = 0; i < availableAnalyses.size(); ++i) {
-        cout << i + 1 << ". " << *availableAnalyses.get(i) << "\n";
-    }
+    for_each(catalog.begin(), catalog.end(), [](const AnalysisMap::value_type& entry) {
+        cout << "ID " << entry.first << ". " << *entry.second << "\n";
+        });
+}
+
+void Menu::print_analysis_list(const Analytics::AnalysisList& list) const {
+    for_each(list.begin(), list.end(), [](const Analysis* a) {
+        cout << "ID " << a->get_id() << ". " << *a << "\n";
+        });
 }
 
 void Menu::search_analyses_by_price() const {
-    if (availableAnalyses.empty()) {
+    if (catalog.empty()) {
         throw NotFoundException("Список анализов пуст.");
     }
 
@@ -300,25 +295,19 @@ void Menu::search_analyses_by_price() const {
         throw InvalidDataException("Максимальная стоимость не может быть отрицательной.");
     }
 
-    auto filteredAnalyses = availableAnalyses.find_by([maxPrice](Analysis* a) {
-        return a->get_base_cost() <= maxPrice;
-        });
-
-    if (filteredAnalyses.empty()) {
+    const auto found = Analytics::find_by_max_base_cost(catalog, maxPrice);
+    if (found.empty()) {
         cout << "Не найдено анализов с базовой стоимостью до " << maxPrice << " руб.\n";
         return;
     }
 
-    cout << "\n=== РЕЗУЛЬТАТЫ ПОИСКА ПО ЦЕНЕ (find_by) ===\n";
-    for (size_t i = 0; i < filteredAnalyses.size(); ++i) {
-        cout << i + 1 << ". " << *filteredAnalyses[i] << "\n";
-    }
+    cout << "\n=== РЕЗУЛЬТАТЫ ПОИСКА ПО ЦЕНЕ (copy_if) ===\n";
+    print_analysis_list(found);
 }
 
 void Menu::change_analysis_cost() {
-    display_analyses(); 
-    int idx = read_int("Выберите номер анализа для изменения стоимости: ") - 1;
-    Analysis* analysis = availableAnalyses.get(idx);
+    display_analyses();
+    Analysis* analysis = require_analysis(read_int("Введите ID анализа для изменения стоимости: "));
     double newCost = read_double("Введите новую базовую стоимость: ");
 
     double oldCost = analysis->get_base_cost();
@@ -339,7 +328,7 @@ void Menu::add_patient() {
 }
 
 void Menu::take_test() {
-    if (availableAnalyses.empty()) {
+    if (catalog.empty()) {
         throw NotFoundException("Список анализов пуст!");
     }
     if (patients.empty()) {
@@ -348,15 +337,14 @@ void Menu::take_test() {
 
     int p_idx = select_patient();
     display_analyses();
-    int a_idx = read_int("Введите номер анализа: ") - 1;
-    Analysis* analysis = availableAnalyses.get(a_idx);
+    Analysis* analysis = require_analysis(read_int("Введите ID анализа: "));
 
     string date;
     cout << "Введите дату сдачи (например, 10.09.2026): ";
     getline(cin, date);
     double val = read_double("Введите полученный результат (число): ");
 
-    TestResult result(analysis, date, val); 
+    TestResult result(analysis, date, val);
 
     patients.get(p_idx) += result;
     cout << "Результат анализа успешно добавлен пациенту!\n";
@@ -374,9 +362,9 @@ void Menu::display_patient_card() const {
         throw NotFoundException("Список пациентов пуст.");
     }
     cout << "\n=== МЕДИЦИНСКИЕ КАРТЫ ПАЦИЕНТОВ ===\n";
-    for (int i = 0; i < patients.size(); ++i) {
-        cout << patients.get(i) << "\n";
-    }
+    for_each(patients.begin(), patients.end(), [](const Patient& patient) {
+        cout << patient << "\n";
+        });
 }
 
 void Menu::add_analysis() {
@@ -402,44 +390,43 @@ void Menu::add_analysis() {
     double minN = read_double("Мин. норма: ");
     double maxN = read_double("Макс. норма: ");
 
-    Analysis* newAnalysis = nullptr;
+    unique_ptr<Analysis> newAnalysis;
 
     if (typeChoice == 1) {
         bool fasting = read_yes_no("Требуется сдача натощак (1 - Да, 0 - Нет): ");
         double reagentCost = read_double("Стоимость реагентов: ");
-        newAnalysis = new BloodAnalysis(name, category, baseCost, minN, maxN, fasting, reagentCost);
+        newAnalysis = make_unique<BloodAnalysis>(name, category, baseCost, minN, maxN, fasting, reagentCost);
     }
     else if (typeChoice == 2) {
         bool sterile = read_yes_no("Нужен контейнер (1 - Да, 0 - Нет): ");
         double containerCost = sterile ? read_double("Стоимость контейнера: ") : 0.0;
-        newAnalysis = new UrineAnalysis(name, category, baseCost, minN, maxN, sterile, containerCost);
+        newAnalysis = make_unique<UrineAnalysis>(name, category, baseCost, minN, maxN, sterile, containerCost);
     }
     else {
         string gene;
         cout << "Введите ген-маркер: ";
         getline(cin, gene);
         double multiplier = read_double("Коэффициент сложности: ");
-        newAnalysis = new GeneticAnalysis(name, category, baseCost, minN, maxN, gene, multiplier);
+        newAnalysis = make_unique<GeneticAnalysis>(name, category, baseCost, minN, maxN, gene, multiplier);
     }
 
-    register_analysis(newAnalysis);
-    cout << "Новый вид анализа успешно добавлен в шаблонный контейнер!\n";
-    journal("Добавлен анализ #" + to_string(newAnalysis->get_id()) + " \"" + name + "\" (" + newAnalysis->get_type() + ")");
+    const string type = newAnalysis->get_type();
+    const int id = register_analysis(move(newAnalysis));
+    cout << "Новый вид анализа успешно добавлен в каталог!\n";
+    journal("Добавлен анализ #" + to_string(id) + " \"" + name + "\" (" + type + ")");
 }
 
 void Menu::remove_analysis() {
     display_analyses();
-    int idx = read_int("Выберите номер анализа для удаления: ") - 1;
-    Analysis* targetAnalysis = availableAnalyses.get(idx); 
+    const int id = read_int("Введите ID анализа для удаления: ");
+    Analysis* target = require_analysis(id);
 
-    check_analysis_not_used(targetAnalysis, patients); 
+    check_analysis_not_used(target, patients);
 
-    const int removedId = targetAnalysis->get_id();
-    const string removedName = targetAnalysis->get_name();
-    delete targetAnalysis;
-    availableAnalyses.remove(idx);
+    const string removedName = target->get_name();
+    catalog.erase(id);
     cout << "Вид анализа удален из базы.\n";
-    journal("Удалён анализ #" + to_string(removedId) + " \"" + removedName + "\"");
+    journal("Удалён анализ #" + to_string(id) + " \"" + removedName + "\"");
 }
 
 void Menu::remove_test_result() {
@@ -467,16 +454,16 @@ void Menu::remove_test_result() {
 }
 
 void Menu::compare_analyses() const {
-    if (availableAnalyses.size() < 2) {
+    if (catalog.size() < 2) {
         throw ConstraintViolationException("Для сравнения нужно минимум 2 анализа в базе.");
     }
     display_analyses();
-    int idx1 = read_int("Первый анализ: ") - 1;
-    const Analysis& a1 = *availableAnalyses.get(idx1); 
-    int idx2 = read_int("Второй анализ: ") - 1;
-    const Analysis& a2 = *availableAnalyses.get(idx2); 
+    const int id1 = read_int("ID первого анализа: ");
+    const Analysis& a1 = *require_analysis(id1);
+    const int id2 = read_int("ID второго анализа: ");
+    const Analysis& a2 = *require_analysis(id2);
 
-    if (idx1 == idx2) {
+    if (id1 == id2) {
         throw InvalidDataException("Вы выбрали один и тот же анализ.");
     }
 
@@ -505,12 +492,12 @@ int Menu::select_patient() const {
         cout << i + 1 << ". " << patients.get(i).get_full_name() << "\n";
     }
     int idx = read_int("Ваш выбор: ") - 1;
-    patients.get(idx); 
+    patients.get(idx);
     return idx;
 }
 
 void Menu::search_specific_analysis() const {
-    if (availableAnalyses.empty()) {
+    if (catalog.empty()) {
         throw NotFoundException("Список анализов пуст.");
     }
 
@@ -519,27 +506,136 @@ void Menu::search_specific_analysis() const {
 
     getline(cin >> ws, targetName);
 
-    int foundIndex = -1;
-    for (int i = 0; i < availableAnalyses.size(); ++i) {
-        if (availableAnalyses.get(i)->get_name() == targetName) {
-            foundIndex = i;
-            break;
-        }
-    }
-
-    if (foundIndex != -1) {
-        cout << "\n[ОБЪЕКТ НАЙДЕН]: Элемент обнаружен в коллекции под индексом [" << foundIndex << "]:\n";
-        cout << *availableAnalyses.get(foundIndex) << "\n";
+    const Analysis* found = Analytics::find_by_name(catalog, targetName);
+    if (found) {
+        cout << "\n[ОБЪЕКТ НАЙДЕН]: Элемент обнаружен в каталоге под ID " << found->get_id() << ":\n";
+        cout << *found << "\n";
     }
     else {
-        cout << "\n[ПОИСК]: Объект с таким наименованием не найден в коллекции.\n";
+        cout << "\n[ПОИСК]: Объект с таким наименованием не найден в каталоге.\n";
     }
+}
+
+void Menu::search_analyses_by_criteria() const {
+    if (catalog.empty()) {
+        throw NotFoundException("Список анализов пуст.");
+    }
+
+    const auto groups = Analytics::group_by_type(catalog);
+    vector<string> types;
+    transform(groups.begin(), groups.end(), back_inserter(types),
+        [](const pair<const string, Analytics::AnalysisList>& group) { return group.first; });
+
+    cout << "\nТип анализа:\n0. Любой\n";
+    for (size_t i = 0; i < types.size(); ++i) {
+        cout << i + 1 << ". " << types[i] << "\n";
+    }
+    const int typeChoice = read_int("Ваш выбор: ");
+    if (typeChoice < 0 || typeChoice > static_cast<int>(types.size())) {
+        throw InvalidDataException("Нет типа с номером " + to_string(typeChoice) + ".");
+    }
+
+    const auto categories = Analytics::categories(catalog);
+    cout << "Существующие категории:";
+    for_each(categories.begin(), categories.end(), [](const string& category) { cout << " [" << category << "]"; });
+    cout << "\n";
+    const string category = read_line("Часть названия категории (Enter - любая): ");
+
+    const double minPrice = read_double("Минимальная итоговая стоимость (0 - без ограничения): ");
+    const double maxPrice = read_double("Максимальная итоговая стоимость (0 - без ограничения): ");
+    if (!(minPrice >= 0) || !(maxPrice >= 0)) {
+        throw InvalidDataException("Стоимость не может быть отрицательной.");
+    }
+    if (maxPrice > 0 && maxPrice < minPrice) {
+        throw InvalidDataException("Максимальная стоимость не может быть меньше минимальной.");
+    }
+
+    SearchCriteria criteria;
+    criteria.type = typeChoice == 0 ? "" : types[typeChoice - 1];
+    criteria.category = category;
+    criteria.minPrice = minPrice;
+    criteria.maxPrice = maxPrice > 0 ? maxPrice : -1.0;
+
+    const auto found = Analytics::find_by_criteria(catalog, criteria);
+    if (found.empty()) {
+        cout << "\nПо заданным критериям анализов не найдено.\n";
+        return;
+    }
+    cout << "\n=== НАЙДЕНО АНАЛИЗОВ: " << found.size() << " ===\n";
+    print_analysis_list(found);
+}
+
+void Menu::sort_analyses_menu() const {
+    if (catalog.empty()) {
+        throw NotFoundException("Список анализов пуст.");
+    }
+
+    cout << "\nСортировать анализы:\n"
+        << "1. По итоговой стоимости (по возрастанию)\n"
+        << "2. По итоговой стоимости (по убыванию)\n"
+        << "3. По названию\n";
+    const int choice = read_int("Ваш выбор: ");
+    if (choice < 1 || choice > 3) {
+        throw InvalidDataException("Неизвестный вариант сортировки: " + to_string(choice) + " (допустимо 1-3).");
+    }
+
+    auto list = Analytics::list_all(catalog);
+    Analytics::sort_analyses(list, choice == 3 ? SortKey::Name : SortKey::Price, choice != 2);
+
+    cout << "\n=== АНАЛИЗЫ ОТСОРТИРОВАНЫ ===\n";
+    print_analysis_list(list);
+}
+
+void Menu::group_analyses() const {
+    if (catalog.empty()) {
+        throw NotFoundException("Список анализов пуст.");
+    }
+
+    cout << "\n=== ГРУППИРОВКА АНАЛИЗОВ ПО ТИПУ ===\n";
+    const auto groups = Analytics::group_by_type(catalog);
+    for (const auto& group : groups) {
+        cout << group.first << " (" << group.second.size() << "):\n";
+        for_each(group.second.begin(), group.second.end(), [](const Analysis* a) {
+            cout << "  ID " << a->get_id() << ": " << a->get_name()
+                << " - " << a->calculate_total_cost() << " руб.\n";
+            });
+    }
+
+    const auto categories = Analytics::categories(catalog);
+    cout << "\nУникальных категорий: " << categories.size() << ":";
+    for_each(categories.begin(), categories.end(), [](const string& category) { cout << " [" << category << "]"; });
+    cout << "\n";
+}
+
+void Menu::show_statistics() const {
+    cout << "\n=== СТАТИСТИКА ===\n" << Analytics::statistics_text(catalog, patients);
+}
+
+void Menu::show_patient_results_sorted() const {
+    const int p_idx = select_patient();
+    const Patient& patient = patients.get(p_idx);
+    if (patient.get_results().empty()) {
+        throw NotFoundException("У пациента нет результатов анализов.");
+    }
+
+    cout << "\nПорядок:\n1. Сначала новые\n2. Сначала старые\n";
+    const int choice = read_int("Ваш выбор: ");
+    if (choice < 1 || choice > 2) {
+        throw InvalidDataException("Неизвестный порядок: " + to_string(choice) + " (допустимо 1-2).");
+    }
+
+    const auto results = Analytics::sorted_results(patient, choice == 1);
+    cout << "\n=== РЕЗУЛЬТАТЫ ПАЦИЕНТА " << patient.get_full_name() << " ПО ДАТЕ ===\n";
+    for_each(results.begin(), results.end(), [](const TestResult& result) { cout << result << "\n"; });
 }
 
 void Menu::demo_lab5_templates() {
     cout << "\n=== ДЕМОНСТРАЦИЯ ЛАБЫ №5 (Шаблоны) ===\n";
-    cout << "1. Collection<Analysis*> содержит анализов: " << availableAnalyses.size() << "\n";
+    cout << "1. Каталог анализов (map<int, unique_ptr<Analysis>>) содержит анализов: " << catalog.size() << "\n";
     cout << "2. Collection<Patient> содержит пациентов: " << patients.size() << "\n";
+
+    const auto withResults = patients.find_by([](const Patient& patient) { return !patient.get_results().empty(); });
+    cout << "3. Collection<Patient>::find_by: пациентов с результатами анализов: " << withResults.size() << "\n";
 }
 
 void Menu::demo_lab6_exceptions() {
@@ -549,8 +645,8 @@ void Menu::demo_lab6_exceptions() {
     Patient demoPatient("Демо Пациент");
 
     try {
-        cout << "1) Выход за границы контейнера: get(999)...\n";
-        availableAnalyses.get(999);
+        cout << "1) Выход за границы контейнера: patients.get(999)...\n";
+        patients.get(999);
     }
     catch (const IndexOutOfBoundsException& e) {
         cout << "   [IndexOutOfBoundsException / " << e.get_exception_category() << "]: " << e.what() << "\n";
@@ -618,13 +714,19 @@ void Menu::print_menu() const {
         << "----------------------------------------\n"
         << "10. [Лаба №5] Демонстрация шаблонов\n"
         << "11. [Лаба №6] Демонстрация исключений\n"
-        << "12. [Лаба №5] Поиск анализов по цене (find_by)\n"
-        << "13. [Лаба №5] Точный поиск объекта\n"
+        << "12. [Лаба №8] Поиск анализов по цене (copy_if)\n"
+        << "13. [Лаба №8] Точный поиск анализа по названию (find_if)\n"
         << "----------------------------------------\n"
         << "14. [Лаба №7] Сохранить состояние в файл\n"
         << "15. [Лаба №7] Загрузить состояние из файла\n"
         << "16. [Лаба №7] Показать журнал\n"
         << "17. [Лаба №7] Сформировать текстовый отчёт\n"
+        << "----------------------------------------\n"
+        << "18. [Лаба №8] Поиск анализов по нескольким критериям\n"
+        << "19. [Лаба №8] Сортировка анализов\n"
+        << "20. [Лаба №8] Группировка анализов\n"
+        << "21. [Лаба №8] Статистика\n"
+        << "22. [Лаба №8] Результаты пациента по дате\n"
         << "0. Выход\n";
 }
 
@@ -650,12 +752,17 @@ bool Menu::process_command() {
     case 15: load_state(); break;
     case 16: show_journal(); break;
     case 17: write_report(); break;
+    case 18: search_analyses_by_criteria(); break;
+    case 19: sort_analyses_menu(); break;
+    case 20: group_analyses(); break;
+    case 21: show_statistics(); break;
+    case 22: show_patient_results_sorted(); break;
     case 0:
         save_on_exit();
         cout << "Завершение работы программы...\n";
         return false;
     default:
-        throw InvalidDataException("Пункта меню №" + to_string(choice) + " не существует (допустимо 0-17).");
+        throw InvalidDataException("Пункта меню №" + to_string(choice) + " не существует (допустимо 0-22).");
     }
     return true;
 }

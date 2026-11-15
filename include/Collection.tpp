@@ -60,10 +60,9 @@ void Collection<T>::display() const {
 
 template <typename T>
 int Collection<T>::find_object(const T& item) const {
-    for (size_t i = 0; i < items.size(); ++i) {
-        if (items[i] == item) {
-            return static_cast<int>(i);
-        }
+    auto it = std::find(items.begin(), items.end(), item);
+    if (it == items.end()) {
+        return -1;
     }
-    return -1;
+    return static_cast<int>(it - items.begin());
 }

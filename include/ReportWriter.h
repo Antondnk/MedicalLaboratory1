@@ -1,11 +1,11 @@
 #pragma once
 #include <string>
-#include "Analysis.h"
 #include "Collection.h"
 #include "Patient.h"
+#include "Types.h"
 
 class ReportWriter {
 public:
-    static std::string build(const Collection<Analysis*>& analyses, const Collection<Patient>& patients);
-    static void write(const std::string& path, const Collection<Analysis*>& analyses, const Collection<Patient>& patients);
+    static std::string build(const AnalysisMap& catalog, const Collection<Patient>& patients);
+    static void write(const std::string& path, const AnalysisMap& catalog, const Collection<Patient>& patients);
 };

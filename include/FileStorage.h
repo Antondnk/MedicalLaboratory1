@@ -5,9 +5,10 @@
 #include "Analysis.h"
 #include "Collection.h"
 #include "Patient.h"
+#include "Types.h"
 
 struct LoadedState {
-    std::vector<std::unique_ptr<Analysis>> analyses;
+    AnalysisMap analyses;
     std::vector<Patient> patients;
 };
 
@@ -17,7 +18,7 @@ public:
     static void write_atomic(const std::string& path, const std::string& content);
 
     static void save(const std::string& path,
-        const Collection<Analysis*>& analyses,
+        const AnalysisMap& analyses,
         const Collection<Patient>& patients);
 
     static LoadedState load(const std::string& path);

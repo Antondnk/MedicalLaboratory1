@@ -1,6 +1,8 @@
 #include "ReportWriter.h"
+#include "Analytics.h"
 #include "FileStorage.h"
 #include "Logger.h"
+#include <algorithm>
 #include <iomanip>
 #include <locale>
 #include <sstream>
@@ -18,7 +20,7 @@ std::string money(double value) {
 
 }
 
-std::string ReportWriter::build(const Collection<Analysis*>& analyses, const Collection<Patient>& patients) {
+std::string ReportWriter::build(const AnalysisMap& catalog, const Collection<Patient>& patients) {
     std::ostringstream out;
     out.imbue(std::locale::classic());
 
@@ -26,62 +28,48 @@ std::string ReportWriter::build(const Collection<Analysis*>& analyses, const Col
     out << "Сформирован: " << Logger::timestamp() << "\n";
     out << DOUBLE_LINE << "\n\n";
 
-    out << "КАТАЛОГ АНАЛИЗОВ (" << analyses.size() << ")\n" << LINE << "\n";
-    if (analyses.empty()) {
+    out << "КАТАЛОГ АНАЛИЗОВ (" << catalog.size() << ")\n" << LINE << "\n";
+    if (catalog.empty()) {
         out << "Каталог пуст.\n";
     }
-    for (int i = 0; i < analyses.size(); ++i) {
-        const Analysis& a = *analyses.get(i);
+    std::for_each(catalog.begin(), catalog.end(), [&out](const AnalysisMap::value_type& entry) {
+        const Analysis& a = *entry.second;
         out << "#" << a.get_id() << " [" << a.get_type() << "] " << a.get_name()
             << " | категория: " << a.get_category()
             << " | итоговая стоимость: " << money(a.calculate_total_cost()) << " руб."
             << " | норма: " << money(a.get_min_normal()) << " - " << money(a.get_max_normal()) << "\n";
-    }
+        });
 
-    int totalResults = 0;
-    int normal = 0;
-    int below = 0;
-    int above = 0;
-    int critical = 0;
-    double revenue = 0.0;
+    out << "\nАНАЛИЗЫ ПО ТИПАМ\n" << LINE << "\n";
+    const auto groups = Analytics::group_by_type(catalog);
+    for (const auto& group : groups) {
+        out << group.first << ": " << group.second.size() << "\n";
+    }
 
     out << "\nПАЦИЕНТЫ (" << patients.size() << ")\n" << LINE << "\n";
     if (patients.empty()) {
         out << "Пациентов нет.\n";
     }
-    for (int i = 0; i < patients.size(); ++i) {
-        const Patient& patient = patients.get(i);
+    std::for_each(patients.begin(), patients.end(), [&out](const Patient& patient) {
         out << "#" << patient.get_id() << " " << patient.get_full_name()
             << " (результатов: " << patient.get_results().size() << ")\n";
 
+        const auto results = Analytics::sorted_results(patient, false);
         int number = 1;
-        for (const auto& result : patient.get_results()) {
-            const bool isCritical = is_critical(result);
+        std::for_each(results.begin(), results.end(), [&out, &number](const TestResult& result) {
             out << "    " << number++ << ") " << result.get_date()
                 << " | " << result.get_analysis()->get_name()
                 << " | результат: " << money(result.get_value())
                 << " | статус: " << result.get_status()
-                << (isCritical ? " | КРИТИЧЕСКИЙ" : "") << "\n";
-
-            ++totalResults;
-            revenue += result.get_analysis()->calculate_total_cost();
-            if (isCritical) ++critical;
-            if (result.get_status() == "Норма") ++normal;
-            else if (result.get_status() == "Ниже нормы") ++below;
-            else if (result.get_status() == "Выше нормы") ++above;
-        }
-    }
+                << (is_critical(result) ? " | КРИТИЧЕСКИЙ" : "") << "\n";
+            });
+        });
 
     out << "\nИТОГИ\n" << LINE << "\n";
-    out << "Видов анализов в каталоге: " << analyses.size() << "\n";
-    out << "Пациентов: " << patients.size() << "\n";
-    out << "Результатов всего: " << totalResults << "\n";
-    out << "  в норме: " << normal << ", ниже нормы: " << below << ", выше нормы: " << above << "\n";
-    out << "Критических результатов: " << critical << "\n";
-    out << "Суммарная стоимость сданных анализов: " << money(revenue) << " руб.\n";
+    out << Analytics::statistics_text(catalog, patients);
     return out.str();
 }
 
-void ReportWriter::write(const std::string& path, const Collection<Analysis*>& analyses, const Collection<Patient>& patients) {
-    FileStorage::write_atomic(path, build(analyses, patients));
+void ReportWriter::write(const std::string& path, const AnalysisMap& catalog, const Collection<Patient>& patients) {
+    FileStorage::write_atomic(path, build(catalog, patients));
 }

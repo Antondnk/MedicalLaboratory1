@@ -338,7 +338,7 @@ std::unique_ptr<Analysis> parse_analysis(Reader& r) {
     return result;
 }
 
-Patient parse_patient(Reader& r, const std::map<int, const Analysis*>& analyses, std::set<int>& usedIds) {
+Patient parse_patient(Reader& r, const AnalysisMap& analyses, std::set<int>& usedIds) {
     Fields f(r.require(), r);
     if (f.word() != "P") {
         r.fail("ожидалась запись пациента (P).");
@@ -372,7 +372,7 @@ Patient parse_patient(Reader& r, const std::map<int, const Analysis*>& analyses,
         if (it == analyses.end()) {
             throw NotFoundException("результат ссылается на несуществующий анализ с ID " + std::to_string(analysisId) + ".");
         }
-        patient += TestResult(it->second, date, value);
+        patient += TestResult(it->second.get(), date, value);
     }
     return patient;
 }
@@ -393,23 +393,23 @@ LoadedState parse(Reader& r) {
     }
 
     const int analysisCount = read_count(r, "ANALYSES");
-    std::map<int, const Analysis*> byId;
     std::set<std::string> names;
     for (int i = 0; i < analysisCount; ++i) {
         std::unique_ptr<Analysis> analysis = parse_analysis(r);
-        if (!byId.emplace(analysis->get_id(), analysis.get()).second) {
-            throw DuplicateIdException("анализ с ID " + std::to_string(analysis->get_id()) + " встречается в файле повторно.");
+        const int id = analysis->get_id();
+        if (state.analyses.count(id) != 0) {
+            throw DuplicateIdException("анализ с ID " + std::to_string(id) + " встречается в файле повторно.");
         }
         if (!names.insert(analysis->get_name()).second) {
             throw DuplicateIdException("название анализа \"" + analysis->get_name() + "\" встречается в файле повторно.");
         }
-        state.analyses.push_back(std::move(analysis));
+        state.analyses[id] = std::move(analysis);
     }
 
     const int patientCount = read_count(r, "PATIENTS");
     std::set<int> patientIds;
     for (int i = 0; i < patientCount; ++i) {
-        state.patients.push_back(parse_patient(r, byId, patientIds));
+        state.patients.push_back(parse_patient(r, state.analyses, patientIds));
     }
 
     Fields end(r.require(), r);
@@ -465,15 +465,15 @@ void FileStorage::write_atomic(const std::string& path, const std::string& conte
 }
 
 void FileStorage::save(const std::string& path,
-    const Collection<Analysis*>& analyses,
+    const AnalysisMap& analyses,
     const Collection<Patient>& patients) {
     std::ostringstream buf;
     buf.imbue(std::locale::classic());
 
     buf << MAGIC << ' ' << FORMAT_VERSION << '\n';
     buf << "ANALYSES " << analyses.size() << '\n';
-    for (int i = 0; i < analyses.size(); ++i) {
-        write_analysis(buf, *analyses.get(i));
+    for (const auto& entry : analyses) {
+        write_analysis(buf, *entry.second);
     }
 
     buf << "PATIENTS " << patients.size() << '\n';

@@ -8,6 +8,7 @@ namespace {
 
 void report_current_exception() {
     try {
+        throw;
     }
     catch (const InvalidDataException& e) {
         cerr << "\n[НЕКОРРЕКТНЫЕ ДАННЫЕ] " << e.what()
@@ -51,6 +52,7 @@ void report_current_exception() {
         cerr << "\n[НЕИЗВЕСТНАЯ ОШИБКА]\n";
     }
 }
+
 }
 
 int main() {
