@@ -52,7 +52,6 @@ void report_current_exception() {
         cerr << "\n[НЕИЗВЕСТНАЯ ОШИБКА]\n";
     }
 }
-
 }
 
 int main() {
